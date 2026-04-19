@@ -193,7 +193,7 @@ frame:SetScript("OnUpdate", function(_, elapsed)
             --    PlayRandom(info.cat, info.override)
            -- end
       --  elseif not isActive then
-            buffActive[spellID] = false
+           -- buffActive[spellID] = false
       --  end
    -- end
 end)

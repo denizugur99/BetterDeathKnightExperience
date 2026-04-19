@@ -196,7 +196,7 @@ frame:SetScript("OnUpdate", function(_, elapsed)
             buffActive[spellID] = false
       --  end
    -- end
---end)
+end)
 
 local AttackSpells = {
     [49143]=true,[49020]=true,[49184]=true,[47541]=true,[55090]=true,

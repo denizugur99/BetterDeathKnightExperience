@@ -2,27 +2,21 @@ local _, _, classId = UnitClass("player")
 if classId ~= 6 then return end
 
 DKE_settings = DKE_settings or {}
-local DKE_soundEnabled     = (DKE_settings.soundEnabled ~= false)
-local DKE_GLOBAL_CD        = 12
-local DKE_OVERRIDE_CD      = 3
-local DKE_lastSoundTime    = 0
-local DKE_lastOverrideTime = 0
+local DKE_soundEnabled  = (DKE_settings.soundEnabled ~= false)
+local DKE_debugEnabled  = false
+local DKE_GLOBAL_CD     = 0
+local DKE_lastSoundTime = 0
 
-local function CanPlay(override)
+local function CanPlay()
     local now = GetTime()
-    if override then
-        if now - DKE_lastOverrideTime < DKE_OVERRIDE_CD then return false end
-        DKE_lastOverrideTime = now
-        return true
-    end
     if now - DKE_lastSoundTime < DKE_GLOBAL_CD then return false end
     DKE_lastSoundTime = now
     return true
 end
 
-local function PlayRandom(category, override)
+local function PlayRandom(category, force)
     if not DKE_soundEnabled then return end
-    if not CanPlay(override) then return end
+    if not force and not CanPlay() then return end
     local sounds = DKE_Sounds[category]
     if not sounds or #sounds == 0 then return end
     local totalWeight = 0
@@ -89,6 +83,157 @@ DKE_Sounds = {
     },
 }
 
+local SpellToSound = {
+    [42650]  = { cat = "ARMY",   prob = 1.0  }, -- Army of the Dead
+    [390260] = { cat = "ARMY",   prob = 1.0  }, -- Commander of the Dead
+    [46584]  = { cat = "RAISE",  prob = 0.75 }, -- Raise Dead
+    [61999]  = { cat = "RAISE",  prob = 0.75 }, -- Raise Dead (alt)
+    [49143]  = { cat = "ATTACK", prob = 0.3  }, -- Frost Strike
+    [49020]  = { cat = "ATTACK", prob = 0.3  }, -- Obliterate
+    [55090]  = { cat = "ATTACK", prob = 0.3  }, -- Scourge Strike
+    [51271]  = { cat = "ATTACK", prob = 1.0, cd = 45 }, -- Pillar of Frost
+}
+
+local AttackSpells = {
+    [49143]=true, [49020]=true, [49184]=true, [47541]=true, [55090]=true,
+    [50842]=true, [207311]=true, [195292]=true, [206930]=true, [195182]=true,
+    [220143]=true, [43265]=true, [49998]=true, [51271]=true, [49206]=true, [63560]=true,
+}
+
+
+local spellLastPlayed = {}
+
+local function HandleResolvedSpell(spellID)
+    if not spellID then return end
+    if not InCombatLockdown() then return end
+    if DKE_debugEnabled then
+        print("|cffC41E3ADKE DEBUG|r key resolved spellID=" .. tostring(spellID))
+    end
+    local info = SpellToSound[spellID]
+    if info then
+        local now = GetTime()
+        if info.cd and now - (spellLastPlayed[spellID] or 0) < info.cd then
+            if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r spell CD'de, atlandi") end
+            return
+        end
+        if math.random() <= info.prob then
+            spellLastPlayed[spellID] = now
+            PlayRandom(info.cat, info.cd ~= nil)
+        end
+    elseif AttackSpells[spellID] then
+        if math.random() <= 0.4 then
+            PlayRandom("ATTACK")
+        end
+    elseif DKE_debugEnabled then
+        print("|cffC41E3ADKE DEBUG|r listede yok, eklemek icin: [" .. tostring(spellID) .. "]=true")
+    end
+end
+
+local BAR_OFFSETS = {
+    ACTIONBUTTON          = 0,
+    MULTIACTIONBAR3BUTTON = 48,
+    MULTIACTIONBAR4BUTTON = 60,
+    MULTIACTIONBAR2BUTTON = 72,
+    MULTIACTIONBAR1BUTTON = 84,
+    BONUSACTIONBUTTON     = 120,
+}
+
+local BAR_FRAME_PREFIX = {
+    ACTIONBUTTON          = "ActionButton",
+    MULTIACTIONBAR1BUTTON = "MultiBarBottomLeftButton",
+    MULTIACTIONBAR2BUTTON = "MultiBarBottomRightButton",
+    MULTIACTIONBAR3BUTTON = "MultiBarRightButton",
+    MULTIACTIONBAR4BUTTON = "MultiBarLeftButton",
+    BONUSACTIONBUTTON     = "BonusActionButton",
+}
+
+local function ResolveActionSlot(action)
+    if not action or action == "" then return nil end
+    for barName, framePrefix in pairs(BAR_FRAME_PREFIX) do
+        local n = action:match("^" .. barName .. "(%d+)$")
+        if n then
+            local button = _G and _G[framePrefix .. n]
+            if button then
+                local slot = button.action
+                if type(slot) == "number" and slot > 0 then return slot end
+            end
+        end
+    end
+    for barName, offset in pairs(BAR_OFFSETS) do
+        local n = action:match("^" .. barName .. "(%d+)$")
+        if n then return offset + tonumber(n) end
+    end
+    return nil
+end
+
+local function SpellFromKey(key)
+    local mod = ""
+    if IsShiftKeyDown   and IsShiftKeyDown()   then mod = "SHIFT-" .. mod end
+    if IsControlKeyDown and IsControlKeyDown() then mod = "CTRL-"  .. mod end
+    if IsAltKeyDown     and IsAltKeyDown()     then mod = "ALT-"   .. mod end
+
+    local shiftedToBase = {
+        ["!"]="1",["@"]="2",["#"]="3",["$"]="4",["%"]="5",
+        ["^"]="6",["&"]="7",["*"]="8",["("]="9",[")"]="0",
+        ["_"]="-",["+"]=  "=",["{"]=  "[",["}"]="]",["|"]="\\",
+        [":"]=";",['\"']="'",["<"]=",",[">"]=".",["?"]="/",["'"]=  "2",
+    }
+
+    local tried = {}
+    local candidates = { key, string.upper(key or ""), string.lower(key or "") }
+    local base = shiftedToBase[key]
+    if base then
+        table.insert(candidates, base)
+        table.insert(candidates, string.upper(base))
+        table.insert(candidates, string.lower(base))
+    end
+
+    local action
+    for _, c in ipairs(candidates) do
+        if c and c ~= "" and not tried[c] then
+            tried[c] = true
+            local ok1, found1 = pcall(GetBindingAction, mod .. c, false)
+            if ok1 and found1 and found1 ~= "" then action = found1; break end
+            local ok2, found2 = pcall(GetBindingAction, mod .. c, true)
+            if ok2 and found2 and found2 ~= "" then action = found2; break end
+        end
+    end
+    if not action then return nil end
+
+    local slot = ResolveActionSlot(action)
+    if not slot then return nil end
+
+    local ok, aType, id = pcall(GetActionInfo, slot)
+    if ok and aType == "spell" and id then return id end
+    if ok and aType == "macro" and id and GetMacroSpell then
+        local mSpell = GetMacroSpell(id)
+        if mSpell then return mSpell end
+    end
+    return nil
+end
+
+local MOUSE_TO_BIND_KEY = {
+    LeftButton="BUTTON1", RightButton="BUTTON2", MiddleButton="BUTTON3",
+    Button4="BUTTON4", Button5="BUTTON5",
+}
+
+local keyFrame = CreateFrame("Frame", nil, UIParent)
+keyFrame:SetAllPoints()
+keyFrame:EnableKeyboard(true)
+keyFrame:EnableMouse(true)
+keyFrame:SetPropagateKeyboardInput(true)
+if keyFrame.SetPropagateMouseClicks then keyFrame:SetPropagateMouseClicks(true) end
+
+keyFrame:SetScript("OnKeyDown", function(_, key)
+    if not DKE_soundEnabled then return end
+    HandleResolvedSpell(SpellFromKey(key))
+end)
+
+keyFrame:SetScript("OnMouseDown", function(_, button)
+    if not DKE_soundEnabled then return end
+    HandleResolvedSpell(SpellFromKey(MOUSE_TO_BIND_KEY[button] or button))
+end)
+
 local prevCombat     = false
 local prevDead       = false
 local prevMounted    = false
@@ -96,32 +241,9 @@ local prevAFK        = false
 local prevTargetSelf = false
 local prevPet        = false
 
--- Buff polling: yeni buff gorununce ses calar
--- spellID -> { cat, override, prob }
---local BUFF_WATCH = {
-    --[51271]  = { cat = "ATTACK", override = false, prob = 0.7 }, -- Pillar of Frost
-    --[47568]  = { cat = "ATTACK", override = false, prob = 0.7 }, -- Empower Rune Weapon
-    --[195181] = { cat = "ATTACK", override = false, prob = 0.7 }, -- Bone Shield
-    --[51124]  = { cat = "ATTACK", override = false, prob = 0.5 }, -- Killing Machine (proc)
-   -- [81340]  = { cat = "ATTACK", override = false, prob = 0.5 }, -- Sudden Doom (proc)
-   -- [42650]  = { cat = "ARMY",   override = true,  prob = 1.0 }, -- Army of the Dead aura
---}
-local buffActive = {}
-
-local function GetAura(spellID)
-    if C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID then
-        local ok, info = pcall(C_UnitAuras.GetPlayerAuraBySpellID, spellID)
-        if ok and info then return true end
-    end
-    local ok, name = pcall(UnitBuff, "player", spellID)
-    if ok and name then return true end
-    return false
-end
-
 local pollTimer = 0
 local POLL = 0.2
 
--- Hic RegisterEvent yok, hic GetSpellCooldown yok
 local frame = CreateFrame("Frame")
 frame:SetScript("OnUpdate", function(_, elapsed)
     pollTimer = pollTimer + elapsed
@@ -133,7 +255,7 @@ frame:SetScript("OnUpdate", function(_, elapsed)
     local inCombat = InCombatLockdown()
     if inCombat and not prevCombat then
         prevCombat = true
-        if math.random() <= 0.33 then PlayRandom("AGGRO", false) end
+        if math.random() <= 0.33 then PlayRandom("AGGRO") end
     elseif not inCombat then
         prevCombat = false
     end
@@ -141,10 +263,10 @@ frame:SetScript("OnUpdate", function(_, elapsed)
     local isDead = UnitIsDeadOrGhost("player")
     if isDead and not prevDead then
         prevDead = true
-        PlayRandom("DEATH", false)
+        PlayRandom("DEATH")
     elseif not isDead and prevDead then
         prevDead = false
-        PlayRandom("REVIVE", false)
+        PlayRandom("REVIVE")
     elseif not isDead then
         prevDead = false
     end
@@ -152,7 +274,7 @@ frame:SetScript("OnUpdate", function(_, elapsed)
     local isMounted = IsMounted()
     if isMounted and not prevMounted then
         prevMounted = true
-        PlayRandom("MOUNT", false)
+        PlayRandom("MOUNT")
     elseif not isMounted then
         prevMounted = false
     end
@@ -160,95 +282,26 @@ frame:SetScript("OnUpdate", function(_, elapsed)
     local isAFK = UnitIsAFK("player")
     if isAFK and not prevAFK then
         prevAFK = true
-        PlayRandom("AFKSTART", false)
+        PlayRandom("AFKSTART")
     elseif not isAFK and prevAFK then
         prevAFK = false
-        PlayRandom("AFKEND", false)
+        PlayRandom("AFKEND")
     end
 
     local targetSelf = UnitExists("target") and UnitIsUnit("target", "player")
     if targetSelf and not prevTargetSelf then
         prevTargetSelf = true
-        PlayRandom("SELECT", false)
+        PlayRandom("SELECT")
     elseif not targetSelf then
         prevTargetSelf = false
     end
 
-    -- Raise Dead: pet yokken pet gelirse ses
     local hasPet = UnitExists("pet")
     if hasPet and not prevPet then
         prevPet = true
-        if math.random() <= 0.75 then PlayRandom("RAISE", false) end
+        if math.random() <= 0.75 then PlayRandom("RAISE") end
     elseif not hasPet then
         prevPet = false
-    end
-
-    -- Buff polling: yeni buff gorununce saldiri/army sesi
-    --for spellID, info in pairs(BUFF_WATCH) do
-        --local isActive = GetAura(spellID)
-       -- local wasActive = buffActive[spellID]
-       -- if isActive and not wasActive then
-           -- buffActive[spellID] = true
-           -- if math.random() <= info.prob then
-            --    PlayRandom(info.cat, info.override)
-           -- end
-      --  elseif not isActive then
-           -- buffActive[spellID] = false
-      --  end
-   -- end
-end)
-
-local AttackSpells = {
-    [49143]=true,[49020]=true,[49184]=true,[47541]=true,[55090]=true,
-    [50842]=true,[207311]=true,[195292]=true,[206930]=true,[195182]=true,
-    [220143]=true,[43265]=true,[49998]=true,[51271]=true,[49206]=true,[63560]=true,
-}
-
--- Action bar binding adi → GetActionInfo slot ofseti
-local BAR_OFFSETS = {
-    ACTIONBUTTON          = 0,   -- Ana bar  : slot 1-12
-    MULTIACTIONBAR3BUTTON = 48,  -- Sag bar 1: slot 49-60
-    MULTIACTIONBAR4BUTTON = 60,  -- Sag bar 2: slot 61-72
-    MULTIACTIONBAR2BUTTON = 72,  -- Alt bar 2: slot 73-84
-    MULTIACTIONBAR1BUTTON = 84,  -- Alt bar 1: slot 85-96
-}
-
--- Tusa basilan tuşun hangi spell'e karsilik geldigini döndürür
-local function SpellFromKey(key)
-    local mod = ""
-    if IsShiftKeyDown   and IsShiftKeyDown()   then mod = "SHIFT-" .. mod end
-    if IsControlKeyDown and IsControlKeyDown() then mod = "CTRL-"  .. mod end
-    if IsAltKeyDown     and IsAltKeyDown()     then mod = "ALT-"   .. mod end
-
-    local ok, action = pcall(GetBindingAction, mod .. key, false)
-    if not ok or not action or action == "" then return nil end
-
-    for barName, offset in pairs(BAR_OFFSETS) do
-        local n = action:match("^" .. barName .. "(%d+)$")
-        if n then
-            local ok2, aType, id = pcall(GetActionInfo, offset + tonumber(n))
-            if ok2 and aType == "spell" and id then return id end
-        end
-    end
-    return nil
-end
-
--- Klavye dinleyici: RegisterEvent yok, taint yok
-local keyFrame = CreateFrame("Frame", nil, UIParent)
-keyFrame:SetAllPoints()
-keyFrame:EnableKeyboard(true)
-keyFrame:SetPropagateKeyboardInput(true)  -- tuş oyuna geçmeye devam eder
-keyFrame:SetScript("OnKeyDown", function(_, key)
-    if not DKE_soundEnabled then return end
-    local spellID = SpellFromKey(key)
-    if not spellID then return end
-
-    if spellID == 42650 then
-        PlayRandom("ARMY", true)
-    elseif spellID == 46584 or spellID == 61999 then
-        if math.random() <= 0.75 then PlayRandom("RAISE", false) end
-    elseif AttackSpells[spellID] then
-        if math.random() <= 0.40 then PlayRandom("ATTACK", false) end
     end
 end)
 
@@ -263,7 +316,10 @@ SlashCmdList["DKE"] = function(msg)
         DKE_soundEnabled = false
         DKE_settings.soundEnabled = false
         print("|cffC41E3ADeathKnightExperience|r: Seslendirme |cffFF0000kapali|r.")
+    elseif cmd == "debug" then
+        DKE_debugEnabled = not DKE_debugEnabled
+        print("|cffC41E3ADeathKnightExperience|r: Debug " .. (DKE_debugEnabled and "|cff00FF00acik|r" or "|cffFF0000kapali|r") .. ".")
     else
-        print("|cffC41E3ADeathKnightExperience|r: Kullanim: /dke on  |  /dke off")
+        print("|cffC41E3ADeathKnightExperience|r: Kullanim: /dke on | /dke off | /dke debug")
     end
 end

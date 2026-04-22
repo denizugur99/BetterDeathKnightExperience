@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.bluetracker.gg)",
+      "WebFetch(domain:warcraft.wiki.gg)",
+      "WebSearch"
+    ]
+  }
+}

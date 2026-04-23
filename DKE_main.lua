@@ -14,18 +14,29 @@ local function CanPlay()
     return true
 end
 
+local lastPlayedInCategory = {}
+
 local function PlayRandom(category, force)
     if not DKE_soundEnabled then return end
     if not force and not CanPlay() then return end
     local sounds = DKE_Sounds[category]
     if not sounds or #sounds == 0 then return end
+    local lastPlayed = lastPlayedInCategory[category]
     local totalWeight = 0
-    for _, s in ipairs(sounds) do totalWeight = totalWeight + (s[2] or 1) end
+    for _, s in ipairs(sounds) do
+        local w = (s[2] or 1) * (s[1] == lastPlayed and 0.1 or 1)
+        totalWeight = totalWeight + w
+    end
     local roll = math.random() * totalWeight
     local cum  = 0
     for _, s in ipairs(sounds) do
-        cum = cum + (s[2] or 1)
+        local w = (s[2] or 1) * (s[1] == lastPlayed and 0.1 or 1)
+        cum = cum + w
         if roll <= cum then
+            lastPlayedInCategory[category] = s[1]
+            if DKE_debugEnabled then
+                print("|cffC41E3ADKE DEBUG|r playing: " .. s[1])
+            end
             pcall(PlaySoundFile,
                 "Interface\\AddOns\\DeathKnightExperience\\sounds\\" .. s[1],
                 "Master")
@@ -95,9 +106,9 @@ local SpellToSound = {
 }
 
 local AttackSpells = {
-    [49143]=true, [49020]=true, [49184]=true, [47541]=true, [55090]=true,
-    [50842]=true, [207311]=true, [195292]=true, [206930]=true, [195182]=true,
-    [220143]=true, [43265]=true, [49998]=true, [51271]=true, [49206]=true, [63560]=true,
+    [49184]=true, [47541]=true, [50842]=true, [207311]=true, [195292]=true,
+    [206930]=true, [195182]=true, [220143]=true, [43265]=true, [49998]=true,
+    [49206]=true, [63560]=true,
 }
 
 

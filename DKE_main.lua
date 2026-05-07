@@ -18,7 +18,11 @@ local lastPlayedInCategory = {}
 
 local function PlayRandom(category, force)
     if not DKE_soundEnabled then return end
-    if not force and not CanPlay() then return end
+    if force then
+        DKE_lastSoundTime = GetTime()
+    elseif not CanPlay() then
+        return
+    end
     local sounds = DKE_Sounds[category]
     if not sounds or #sounds == 0 then return end
     local lastPlayed = lastPlayedInCategory[category]
@@ -51,6 +55,7 @@ DKE_Sounds = {
         { "select\\servemeindeath.ogg",      7 }, { "select\\soulmismine.ogg",         1 },
         { "select\\freezeblood.ogg",         1 }, { "select\\beyondcomprehension.ogg", 1 },
         { "select\\youcantescapeme.ogg",     1 }, { "select\\nothingyoucando.ogg",     1 },
+        { "select\\select_dke.ogg",          1 },
     },
     AGGRO = {
         { "aggroed\\deathcomesall.ogg",      1 }, { "aggroed\\comeforth.ogg",          1 },
@@ -60,7 +65,7 @@ DKE_Sounds = {
     DEATH = {
         { "death\\thiscantbe.ogg",     3 }, { "death\\impossible.ogg",     3 },
         { "death\\weakened.ogg",       1 }, { "death\\fallenagain.ogg",    1 },
-        { "death\\notyetdefeated.ogg", 1 },
+        { "death\\notyetdefeated.ogg", 1 }, { "death\\death_dke.ogg",      1 },
     },
     REVIVE = {
         { "revived\\returnfromdead.ogg",  1 }, { "revived\\deathcantholme.ogg",  1 },
@@ -73,6 +78,7 @@ DKE_Sounds = {
     AFKSTART = {
         { "afkstart\\watchclosely.ogg",    1 }, { "afkstart\\waitingforyou.ogg",   1 },
         { "afkstart\\contemplating.ogg",   1 }, { "afkstart\\endlesspatience.ogg", 1 },
+        { "afkstart\\idle_dke.ogg",        1 },
     },
     AFKEND = {
         { "afkend\\enoughrest.ogg",        2 }, { "afkend\\timetomarch.ogg",       2 },
@@ -81,17 +87,36 @@ DKE_Sounds = {
     },
     ARMY = {
         { "army\\risemylieges.ogg",    1 }, { "army\\armyofdead.ogg",      1 },
-        { "army\\scourgecommands.ogg", 1 },
+        { "army\\scourgecommands.ogg", 1 }, { "army\\apocalypse.ogg",      1 },
     },
     RAISE = {
         { "raise\\raisedead.ogg", 1 }, { "raise\\serveyourmaster.ogg", 1 },
+        { "raise\\raise_dke.ogg", 1 }, { "raise\\raise2_dke.ogg",      1 },
     },
     ATTACK = {
         { "attack\\frostmournehungers.ogg", 1 }, { "attack\\youwillserve.ogg",      1 },
         { "attack\\yoursoulmismine.ogg",    1 }, { "attack\\diecreature.ogg",       1 },
         { "attack\\nonecanstopme.ogg",      1 }, { "attack\\feelmywrath.ogg",       1 },
         { "attack\\enoughtalking.ogg",      1 }, { "attack\\ihavenoweakness.ogg",   1 },
+        { "attack\\grip1_dke.ogg",          1 },
     },
+}
+
+local SpellNameToID = {
+    ["Army of the Dead"]      = 42650,
+    ["Commander of the Dead"] = 390260,
+    ["Raise Dead"]            = 46584,
+    ["Frost Strike"]          = 49143,
+    ["Obliterate"]            = 49020,
+    ["Scourge Strike"]        = 55090,
+    ["Pillar of Frost"]       = 51271,
+    ["Death Strike"]          = 49998,
+    ["Death Coil"]            = 47541,
+    ["Death and Decay"]       = 43265,
+    ["Summon Gargoyle"]       = 49206,
+    ["Howling Blast"]         = 49184,
+    ["Death Grip"]            = 49576,
+    ["Apocalypse"]            = 220143,
 }
 
 local SpellToSound = {
@@ -103,11 +128,13 @@ local SpellToSound = {
     [49020]  = { cat = "ATTACK", prob = 0.3  }, -- Obliterate
     [55090]  = { cat = "ATTACK", prob = 0.3  }, -- Scourge Strike
     [51271]  = { cat = "ATTACK", prob = 1.0, cd = 45 }, -- Pillar of Frost
+    [49576]  = { cat = "ATTACK", prob = 0.5  },          -- Death Grip
+    [220143] = { cat = "ARMY",   prob = 0.8  },          -- Apocalypse
 }
 
 local AttackSpells = {
     [49184]=true, [47541]=true, [50842]=true, [207311]=true, [195292]=true,
-    [206930]=true, [195182]=true, [220143]=true, [43265]=true, [49998]=true,
+    [206930]=true, [195182]=true, [43265]=true, [49998]=true,
     [49206]=true, [63560]=true,
 }
 
@@ -177,6 +204,8 @@ local function ResolveActionSlot(action)
     return nil
 end
 
+local macroSlotCache = {}
+
 local function SpellFromKey(key)
     local mod = ""
     if IsShiftKeyDown   and IsShiftKeyDown()   then mod = "SHIFT-" .. mod end
@@ -209,18 +238,59 @@ local function SpellFromKey(key)
             if ok2 and found2 and found2 ~= "" then action = found2; break end
         end
     end
-    if not action then return nil end
+    if not action then
+        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r binding bulunamadi") end
+        return nil
+    end
 
     local slot = ResolveActionSlot(action)
-    if not slot then return nil end
+    if not slot then
+        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r slot cozulemedi: " .. tostring(action)) end
+        return nil
+    end
 
     local ok, aType, id = pcall(GetActionInfo, slot)
+    if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r slot=" .. slot .. " type=" .. tostring(aType) .. " id=" .. tostring(id)) end
     if ok and aType == "spell" and id then return id end
-    if ok and aType == "macro" and id and GetMacroSpell then
-        local mSpell = GetMacroSpell(id)
-        if mSpell then return mSpell end
+    if ok and aType == "macro" and id then
+        -- WoW Midnight: GetActionInfo macro icin dogrudan spell ID donduruyor
+        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r macro direct spellID=" .. id) end
+        return id
     end
     return nil
+end
+
+local function RebuildMacroCache()
+    macroSlotCache = {}
+    local bodyFn = GetMacroBody or (C_Macro and C_Macro.GetMacroBody)
+    if not bodyFn then return end
+    for _, offset in pairs(BAR_OFFSETS) do
+        for i = 1, 12 do
+            local slot = offset + i
+            local ok, aType, macroID = pcall(GetActionInfo, slot)
+            if ok and aType == "macro" and macroID then
+                local ok2, body = pcall(bodyFn, macroID)
+                if ok2 and body then
+                    for line in body:gmatch("[^\n]+") do
+                        local castStr = line:match("^%s*/cast%s+(.+)$") or line:match("^%s*/use%s+(.+)$")
+                        if castStr then
+                            local spellName = castStr:gsub("%b[]", ""):match("^%s*(.-)%s*$")
+                            local sID = spellName and SpellNameToID[spellName]
+                            if sID then
+                                macroSlotCache[slot] = sID
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if DKE_debugEnabled then
+        local count = 0
+        for _ in pairs(macroSlotCache) do count = count + 1 end
+        print("|cffC41E3ADKE DEBUG|r macro cache rebuild: " .. count .. " slot")
+    end
 end
 
 local MOUSE_TO_BIND_KEY = {
@@ -234,6 +304,7 @@ keyFrame:EnableKeyboard(true)
 keyFrame:EnableMouse(true)
 keyFrame:SetPropagateKeyboardInput(true)
 if keyFrame.SetPropagateMouseClicks then keyFrame:SetPropagateMouseClicks(true) end
+
 
 keyFrame:SetScript("OnKeyDown", function(_, key)
     if not DKE_soundEnabled then return end
@@ -263,14 +334,6 @@ frame:SetScript("OnUpdate", function(_, elapsed)
 
     if not DKE_soundEnabled then return end
 
-    local inCombat = InCombatLockdown()
-    if inCombat and not prevCombat then
-        prevCombat = true
-        if math.random() <= 0.33 then PlayRandom("AGGRO") end
-    elseif not inCombat then
-        prevCombat = false
-    end
-
     local isDead = UnitIsDeadOrGhost("player")
     if isDead and not prevDead then
         prevDead = true
@@ -278,41 +341,52 @@ frame:SetScript("OnUpdate", function(_, elapsed)
     elseif not isDead and prevDead then
         prevDead = false
         PlayRandom("REVIVE")
-    elseif not isDead then
-        prevDead = false
+    else
+        prevDead = isDead
     end
 
-    local isMounted = IsMounted()
-    if isMounted and not prevMounted then
-        prevMounted = true
-        PlayRandom("MOUNT")
-    elseif not isMounted then
-        prevMounted = false
-    end
+    if not isDead then
+        local inCombat = InCombatLockdown()
+        if inCombat and not prevCombat then
+            prevCombat = true
+            if math.random() <= 0.33 then PlayRandom("AGGRO") end
+        elseif not inCombat then
+            if prevCombat then RebuildMacroCache() end
+            prevCombat = false
+        end
 
-    local isAFK = UnitIsAFK("player")
-    if isAFK and not prevAFK then
-        prevAFK = true
-        PlayRandom("AFKSTART")
-    elseif not isAFK and prevAFK then
-        prevAFK = false
-        PlayRandom("AFKEND")
-    end
+        local isMounted = IsMounted()
+        if isMounted and not prevMounted then
+            prevMounted = true
+            PlayRandom("MOUNT")
+        elseif not isMounted then
+            prevMounted = false
+        end
 
-    local targetSelf = UnitExists("target") and UnitIsUnit("target", "player")
-    if targetSelf and not prevTargetSelf then
-        prevTargetSelf = true
-        PlayRandom("SELECT")
-    elseif not targetSelf then
-        prevTargetSelf = false
-    end
+        local isAFK = UnitIsAFK("player")
+        if isAFK and not prevAFK then
+            prevAFK = true
+            PlayRandom("AFKSTART")
+        elseif not isAFK and prevAFK then
+            prevAFK = false
+            PlayRandom("AFKEND")
+        end
 
-    local hasPet = UnitExists("pet")
-    if hasPet and not prevPet then
-        prevPet = true
-        if math.random() <= 0.75 then PlayRandom("RAISE") end
-    elseif not hasPet then
-        prevPet = false
+        local targetSelf = UnitExists("target") and UnitIsUnit("target", "player")
+        if targetSelf and not prevTargetSelf then
+            prevTargetSelf = true
+            PlayRandom("SELECT")
+        elseif not targetSelf then
+            prevTargetSelf = false
+        end
+
+        local hasPet = UnitExists("pet")
+        if hasPet and not prevPet then
+            prevPet = true
+            if math.random() <= 0.75 then PlayRandom("RAISE") end
+        elseif not hasPet then
+            prevPet = false
+        end
     end
 end)
 
@@ -334,3 +408,5 @@ SlashCmdList["DKE"] = function(msg)
         print("|cffC41E3ADeathKnightExperience|r: Kullanim: /dke on | /dke off | /dke debug")
     end
 end
+
+RebuildMacroCache()

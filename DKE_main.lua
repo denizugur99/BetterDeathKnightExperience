@@ -45,11 +45,11 @@ local function PlayRandom(category, force)
             if DKE_debugEnabled then
                 print("|cffC41E3ADKE DEBUG|r playing: " .. s[1])
             end
-            if currentSoundHandle then StopSound(currentSoundHandle) end
-            local _, handle = pcall(PlaySoundFile,
+            if currentSoundHandle then pcall(StopSound, currentSoundHandle) end
+            local ok, success, handle = pcall(PlaySoundFile,
                 "Interface\\AddOns\\DeathKnightExperience\\sounds\\" .. s[1],
                 "Dialog")
-            currentSoundHandle = handle
+            currentSoundHandle = (ok and success) and handle or nil
             return
         end
     end

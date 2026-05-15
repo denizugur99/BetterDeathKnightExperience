@@ -168,7 +168,7 @@ local SpellToSound = {
     --[49143]  = { cat = "ATTACK",       prob = 0.01  },                   -- Frost Strike
     --[49020]  = { cat = "ATTACK",       prob = 0.01  },                   -- Obliterate
     --[55090]  = { cat = "ATTACK",       prob = 0.01 },                   -- Scourge Strike
-    [51271]  = { cat = "PILLAR",       prob = 1.0, cd = 44, anyCombat = true, protect = 6 }, -- Pillar of Frost
+    [51271]  = { cat = "PILLAR",       prob = 1.0, cd = 44, anyCombat = true}, -- Pillar of Frost
     [49576]  = { cat = "DEATHGRIP",    prob = 1.0  },                   -- Death Grip
     [49998]  = { cat = "DEATH_STRIKE", prob = 1.0, cd = 1 },             -- Death Strike
     [43265]  = { cat = "DAD",          prob = 1.0  },                   -- Death and Decay

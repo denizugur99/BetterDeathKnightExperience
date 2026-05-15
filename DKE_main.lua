@@ -99,9 +99,9 @@ DKE_Sounds = {
     BREATH = {
         { "breath_of_syndragosa\\breath_of_sindragosa.ogg", 1 },
     },
-    DEATH_STRIKE = {
-        { "death_strike\\death_strike.ogg", 1 },
-    },
+    --DEATH_STRIKE = {
+       -- { "death_strike\\death_strike.ogg", 1 },
+    --},
     DAD = {
         { "deathanddecay\\death_and_decay.ogg", 1 },
     },
@@ -129,6 +129,21 @@ DKE_Sounds = {
     CHAIN_OF_ICE = {
         { "chainofice\\chains_of_ice.ogg", 1 },
     },
+    ARMY = {
+        { "armyofdead\\army_of_the_dead.ogg", 1 },
+    },
+    DARKTRANSFORM = {
+        { "darktransform\\dark_transformation.ogg", 1 },
+    },
+    DEATHS_ADVANCE = {
+        { "deaths_advance\\deaths_advance_and_death_charge.ogg", 1 },
+    },
+    PUTREFY = {
+        { "putrefy\\putrefy.ogg", 1 },
+    },
+    --SOUL_REAPER = {
+      --  { "soulreaper\\soul_reaper.ogg", 1 },
+    --},
 }
 
 local SpellNameToID = {
@@ -153,16 +168,26 @@ local SpellNameToID = {
     ["Glacial Advance"]        = 194913,
     ["Frostscythe"]            = 207230,
     ["Chain of Ice"]            = 45524,
-    -- ["Army of the Dead"]    = 42650,   -- no sound
-    -- ["Commander of the Dead"] = 390260, -- no sound
-    -- ["Apocalypse"]          = 220143,  -- no sound
+    ["Army of the Dead"]       = 42650,
+    -- ["Commander of the Dead"] = 390260,
+    -- ["Apocalypse"]          = 220143,
     ["Raise Ally"]             = 61999,
+    ["Dark Transformation"]    = 1233448,
+    ["Death's Advance"]        = 48265,
+    ["Death Charge"]           = 444347,
+    ["Putrefy"]                = 1247378,
+    ["Soul Reaper"]            = 343294,
 }
 
 local SpellToSound = {
-    -- [42650]  = { cat = "ARMY",  ... }, -- Army of the Dead      (no sound)
-    -- [390260] = { cat = "ARMY",  ... }, -- Commander of the Dead (no sound)
-    -- [220143] = { cat = "ARMY",  ... }, -- Apocalypse            (no sound)
+    [42650]  = { cat = "ARMY",          prob = 1.0,cd=89, anyCombat = true,protect = 6  }, -- Army of the Dead
+    -- [390260] = { cat = "ARMY",       prob = 1.0, anyCombat = true }, -- Commander of the Dead
+    -- [220143] = { cat = "ARMY",       prob = 1.0, anyCombat = true }, -- Apocalypse
+    [1233448] = { cat = "DARKTRANSFORM",  prob = 1.0,cd=44, anyCombat = true }, -- Dark Transformation
+    [48265]   = { cat = "DEATHS_ADVANCE", prob = 1.0, anyCombat = true }, -- Death's Advance
+    [444347]  = { cat = "DEATHS_ADVANCE", prob = 1.0, anyCombat = true }, -- Death Charge
+    [1247378] = { cat = "PUTREFY",        prob = 1.0,cd=5 },                   -- Putrefy
+    --[343294]  = { cat = "SOUL_REAPER",    prob = 1.0 },                   -- Soul Reaper
     [46585]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead
      
     --[49143]  = { cat = "ATTACK",       prob = 0.01  },                   -- Frost Strike
@@ -170,7 +195,8 @@ local SpellToSound = {
     --[55090]  = { cat = "ATTACK",       prob = 0.01 },                   -- Scourge Strike
     [51271]  = { cat = "PILLAR",       prob = 1.0, cd = 44, anyCombat = true}, -- Pillar of Frost
     [49576]  = { cat = "DEATHGRIP",    prob = 1.0  },                   -- Death Grip
-    [49998]  = { cat = "DEATH_STRIKE", prob = 1.0, cd = 1 },             -- Death Strike
+    [49143]  = { cat = "DEATHGRIP",    prob = 1.0  },                   -- Death Grip 
+    --[49998]  = { cat = "DEATH_STRIKE", prob = 1.0, cd = 1 },             -- Death Strike
     [43265]  = { cat = "DAD",          prob = 1.0  },                   -- Death and Decay
     [221562] = { cat = "ASPHYXIATE",   prob = 1.0,cd=45  },                   -- Asphyxiate
     [207167] = { cat = "BLINDING_SLEET", prob = 1.0,cd=60 },                  -- Blinding Sleet
@@ -353,7 +379,6 @@ keyFrame:EnableMouse(true)
 keyFrame:SetPropagateKeyboardInput(true)
 if keyFrame.SetPropagateMouseClicks then keyFrame:SetPropagateMouseClicks(true) end
 
-
 keyFrame:SetScript("OnKeyDown", function(_, key)
     if not DKE_soundEnabled then return end
     HandleResolvedSpell(SpellFromKey(key))
@@ -377,11 +402,16 @@ local loginLastPlayed = nil
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-frame:SetScript("OnEvent", function()
-    local now = GetTime()
-    if not loginLastPlayed or now - loginLastPlayed >= 3600 then
-        loginLastPlayed = now
-        PlayRandom("LOGIN", true)
+frame:RegisterEvent("UNIT_SPELLCAST_SENT")
+frame:SetScript("OnEvent", function(_, event, unit, _, _, spellID)
+    if event == "PLAYER_ENTERING_WORLD" then
+        local now = GetTime()
+        if not loginLastPlayed or now - loginLastPlayed >= 3600 then
+            loginLastPlayed = now
+            PlayRandom("LOGIN", true)
+        end
+    elseif event == "UNIT_SPELLCAST_SENT" and unit == "player" then
+        HandleResolvedSpell(spellID)
     end
 end)
 frame:SetScript("OnUpdate", function(_, elapsed)

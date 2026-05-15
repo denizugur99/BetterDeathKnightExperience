@@ -4,7 +4,8 @@ if classId ~= 6 then return end
 DKE_settings = DKE_settings or {}
 local DKE_soundEnabled  = (DKE_settings.soundEnabled ~= false)
 local DKE_debugEnabled  = false
-local DKE_GLOBAL_CD     = 0
+local DKE_GLOBAL_CD     = 14
+local DKE_FORCE_MIN_GAP = 3
 local DKE_lastSoundTime = 0
 
 local function CanPlay()
@@ -15,11 +16,14 @@ local function CanPlay()
 end
 
 local lastPlayedInCategory = {}
+local currentSoundHandle  = nil
 
 local function PlayRandom(category, force)
     if not DKE_soundEnabled then return end
     if force then
-        DKE_lastSoundTime = GetTime()
+        local now = GetTime()
+        if now - DKE_lastSoundTime < DKE_FORCE_MIN_GAP then return end
+        DKE_lastSoundTime = now
     elseif not CanPlay() then
         return
     end
@@ -41,101 +45,143 @@ local function PlayRandom(category, force)
             if DKE_debugEnabled then
                 print("|cffC41E3ADKE DEBUG|r playing: " .. s[1])
             end
-            pcall(PlaySoundFile,
+            if currentSoundHandle then StopSound(currentSoundHandle) end
+            local _, handle = pcall(PlaySoundFile,
                 "Interface\\AddOns\\DeathKnightExperience\\sounds\\" .. s[1],
-                "Master")
+                "Dialog")
+            currentSoundHandle = handle
             return
         end
     end
 end
 
 DKE_Sounds = {
+    LOGIN = {
+        { "login\\login.ogg", 1 },
+    },
     SELECT = {
-        { "select\\lichking.ogg",            7 }, { "select\\frostmourne.ogg",         7 },
-        { "select\\servemeindeath.ogg",      7 }, { "select\\soulmismine.ogg",         1 },
-        { "select\\freezeblood.ogg",         1 }, { "select\\beyondcomprehension.ogg", 1 },
-        { "select\\youcantescapeme.ogg",     1 }, { "select\\nothingyoucando.ogg",     1 },
-        { "select\\select_dke.ogg",          1 },
+        { "select\\select-1.ogg", 1 }, { "select\\select-2.ogg", 1 },
+        { "select\\select_3.ogg", 1 },
     },
     AGGRO = {
-        { "aggroed\\deathcomesall.ogg",      1 }, { "aggroed\\comeforth.ogg",          1 },
-        { "aggroed\\youboldtochallenge.ogg", 1 }, { "aggroed\\facemethen.ogg",         1 },
-        { "aggroed\\scourgewillprevail.ogg", 1 }, { "aggroed\\worthyopponent.ogg",     1 },
+        { "aggroed\\aggro.ogg", 1 },
     },
     DEATH = {
-        { "death\\thiscantbe.ogg",     3 }, { "death\\impossible.ogg",     3 },
-        { "death\\weakened.ogg",       1 }, { "death\\fallenagain.ogg",    1 },
-        { "death\\notyetdefeated.ogg", 1 }, { "death\\death_dke.ogg",      1 },
+        { "death\\death.ogg",   1 }, { "death\\death_2.ogg", 1 },
+        { "death\\death_3.ogg", 1 }, { "death\\death-4.ogg", 1 },
     },
     REVIVE = {
-        { "revived\\returnfromdead.ogg",  1 }, { "revived\\deathcantholme.ogg",  1 },
-        { "revived\\riseagain.ogg",       1 }, { "revived\\lichkingcantdie.ogg", 1 },
+        { "revived\\revive.ogg", 1 },
     },
     MOUNT = {
-        { "mount\\onward.ogg",           1 }, { "mount\\advance.ogg",          1 },
-        { "mount\\ridefrostedearth.ogg", 1 }, { "mount\\forthelichking.ogg",   1 },
+        { "mount\\mount_1.ogg", 1 }, { "mount\\mount_2.ogg", 1 },
     },
     AFKSTART = {
-        { "afkstart\\watchclosely.ogg",    1 }, { "afkstart\\waitingforyou.ogg",   1 },
-        { "afkstart\\contemplating.ogg",   1 }, { "afkstart\\endlesspatience.ogg", 1 },
-        { "afkstart\\idle_dke.ogg",        1 },
+        { "afkstart\\afkstart.ogg", 1 }, { "afkstart\\idle.ogg", 1 },
     },
     AFKEND = {
-        { "afkend\\enoughrest.ogg",        2 }, { "afkend\\timetomarch.ogg",       2 },
-        { "afkend\\backtobusiness.ogg",    1 }, { "afkend\\finallyreturned.ogg",   1 },
-        { "afkend\\thescourgeawakens.ogg", 1 },
-    },
-    ARMY = {
-        { "army\\risemylieges.ogg",    1 }, { "army\\armyofdead.ogg",      1 },
-        { "army\\scourgecommands.ogg", 1 }, { "army\\apocalypse.ogg",      1 },
-    },
-    RAISE = {
-        { "raise\\raisedead.ogg", 1 }, { "raise\\serveyourmaster.ogg", 1 },
-        { "raise\\raise_dke.ogg", 1 }, { "raise\\raise2_dke.ogg",      1 },
+        { "afkend\\afkend.ogg", 1 },
     },
     ATTACK = {
-        { "attack\\frostmournehungers.ogg", 1 }, { "attack\\youwillserve.ogg",      1 },
-        { "attack\\yoursoulmismine.ogg",    1 }, { "attack\\diecreature.ogg",       1 },
-        { "attack\\nonecanstopme.ogg",      1 }, { "attack\\feelmywrath.ogg",       1 },
-        { "attack\\enoughtalking.ogg",      1 }, { "attack\\ihavenoweakness.ogg",   1 },
-        { "attack\\grip1_dke.ogg",          1 },
+        { "attack\\attack.ogg", 1 },
+    },
+    RAISE = {
+        { "raise\\raise_dead.ogg", 1 }, { "raise\\raise_dke.ogg",  1 },
+        { "raise\\raise2_dke.ogg", 1 },
+    },
+    ASPHYXIATE = {
+        { "asphyxiate\\asphyxiate.ogg", 1 },
+    },
+    BLINDING_SLEET = {
+        { "blinding_sleet\\blinding_sleet.ogg", 1 },
+    },
+    BREATH = {
+        { "breath_of_syndragosa\\breath_of_sindragosa.ogg", 1 },
+    },
+    DEATH_STRIKE = {
+        { "death_strike\\death_strike.ogg", 1 },
+    },
+    DAD = {
+        { "deathanddecay\\death_and_decay.ogg", 1 },
+    },
+    DEATHGATE = {
+        { "deathgate\\death_gate.ogg", 1 },
+    },
+    DEATHGRIP = {
+        { "deathgrip\\death_grip_1.ogg", 1 }, { "deathgrip\\death_grip_2.ogg", 1 },
+    },
+    FROSTWYRM = {
+        { "frostwrym_fury\\frostwyrm_fury.ogg", 1 },
+    },
+    LICHBORNE = {
+        { "lichborne\\lichborne.ogg", 1 },
+    },
+    MIND_FREEZE = {
+        { "mind_freeze\\mind_freeze.ogg", 1 }, { "mind_freeze\\mind_freeze_2.ogg", 1 },
+    },
+    PILLAR = {
+        { "pillar_of_frost\\pillar_of_frost.ogg", 1 },
+    },
+    RAISE_ALLY = {
+        { "raise_ally\\raise_ally.ogg", 1 },
     },
 }
 
 local SpellNameToID = {
-    ["Army of the Dead"]      = 42650,
-    ["Commander of the Dead"] = 390260,
-    ["Raise Dead"]            = 46584,
-    ["Frost Strike"]          = 49143,
-    ["Obliterate"]            = 49020,
-    ["Scourge Strike"]        = 55090,
-    ["Pillar of Frost"]       = 51271,
-    ["Death Strike"]          = 49998,
-    ["Death Coil"]            = 47541,
-    ["Death and Decay"]       = 43265,
-    ["Summon Gargoyle"]       = 49206,
-    ["Howling Blast"]         = 49184,
-    ["Death Grip"]            = 49576,
-    ["Apocalypse"]            = 220143,
+    ["Raise Dead"]             = 46584,
+    ["Frost Strike"]           = 49143,
+    ["Obliterate"]             = 49020,
+    ["Scourge Strike"]         = 55090,
+    ["Pillar of Frost"]        = 51271,
+    ["Death Strike"]           = 49998,
+    ["Death Coil"]             = 47541,
+    ["Death and Decay"]        = 43265,
+    ["Summon Gargoyle"]        = 49206,
+    ["Howling Blast"]          = 49184,
+    ["Death Grip"]             = 49576,
+    ["Asphyxiate"]             = 108194,
+    ["Blinding Sleet"]         = 207167,
+    ["Breath of Sindragosa"]   = 152279,
+    ["Death Gate"]             = 52751,
+    ["Frostwyrm's Fury"]       = 279302,
+    ["Lichborne"]              = 49039,
+    ["Mind Freeze"]            = 47528,
+    ["Glacial Advance"]        = 194913,
+    ["Frostscythe"]            = 207230,
+    -- ["Army of the Dead"]    = 42650,   -- no sound
+    -- ["Commander of the Dead"] = 390260, -- no sound
+    -- ["Apocalypse"]          = 220143,  -- no sound
+    ["Raise Ally"]             = 461621,
 }
 
 local SpellToSound = {
-    [42650]  = { cat = "ARMY",   prob = 1.0  }, -- Army of the Dead
-    [390260] = { cat = "ARMY",   prob = 1.0  }, -- Commander of the Dead
-    [46584]  = { cat = "RAISE",  prob = 0.75 }, -- Raise Dead
-    [61999]  = { cat = "RAISE",  prob = 0.75 }, -- Raise Dead (alt)
-    [49143]  = { cat = "ATTACK", prob = 0.3  }, -- Frost Strike
-    [49020]  = { cat = "ATTACK", prob = 0.3  }, -- Obliterate
-    [55090]  = { cat = "ATTACK", prob = 0.3  }, -- Scourge Strike
-    [51271]  = { cat = "ATTACK", prob = 1.0, cd = 45 }, -- Pillar of Frost
-    [49576]  = { cat = "ATTACK", prob = 0.5  },          -- Death Grip
-    [220143] = { cat = "ARMY",   prob = 0.8  },          -- Apocalypse
+    -- [42650]  = { cat = "ARMY",  ... }, -- Army of the Dead      (no sound)
+    -- [390260] = { cat = "ARMY",  ... }, -- Commander of the Dead (no sound)
+    -- [220143] = { cat = "ARMY",  ... }, -- Apocalypse            (no sound)
+    [46584]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead
+    [61999]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead (alt)
+    [49143]  = { cat = "ATTACK",       prob = 0.1  },                   -- Frost Strike
+    [49020]  = { cat = "ATTACK",       prob = 0.1  },                   -- Obliterate
+    [55090]  = { cat = "ATTACK",       prob = 0.1  },                   -- Scourge Strike
+    [51271]  = { cat = "PILLAR",       prob = 1.0, cd = 44, anyCombat = true},           -- Pillar of Frost
+    [49576]  = { cat = "DEATHGRIP",    prob = 1.0  },                   -- Death Grip
+    [49998]  = { cat = "DEATH_STRIKE", prob = 1.0  },                   -- Death Strike
+    [43265]  = { cat = "DAD",          prob = 1.0  },                   -- Death and Decay
+    [108194] = { cat = "ASPHYXIATE",   prob = 1.0  },                   -- Asphyxiate
+    [207167] = { cat = "BLINDING_SLEET", prob = 1.0 },                  -- Blinding Sleet
+    [152279] = { cat = "BREATH",       prob = 1.0, cd = 89 },           -- Breath of Sindragosa
+    [52751]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
+    [279302] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89 },           -- Frostwyrm's Fury
+    [49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
+    [47528]  = { cat = "MIND_FREEZE",  prob = 1.0  },                   -- Mind Freeze
+    [194913] = { cat = "ATTACK",       prob = 0.1  },                   -- Glacial Advance
+    [207230] = { cat = "ATTACK",       prob = 0.1  },                   -- Frostscythe
+    [461621] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
 }
 
 local AttackSpells = {
     [49184]=true, [47541]=true, [50842]=true, [207311]=true, [195292]=true,
-    [206930]=true, [195182]=true, [43265]=true, [49998]=true,
-    [49206]=true, [63560]=true,
+    [206930]=true, [195182]=true, [49206]=true, [63560]=true,
 }
 
 
@@ -143,15 +189,15 @@ local spellLastPlayed = {}
 
 local function HandleResolvedSpell(spellID)
     if not spellID then return end
-    if not InCombatLockdown() then return end
+    local info = SpellToSound[spellID]
+    if not InCombatLockdown() and not (info and info.anyCombat) then return end
     if DKE_debugEnabled then
         print("|cffC41E3ADKE DEBUG|r key resolved spellID=" .. tostring(spellID))
     end
-    local info = SpellToSound[spellID]
     if info then
         local now = GetTime()
         if info.cd and now - (spellLastPlayed[spellID] or 0) < info.cd then
-            if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r spell CD'de, atlandi") end
+            if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r spell on cooldown, skipped") end
             return
         end
         if math.random() <= info.prob then
@@ -163,7 +209,7 @@ local function HandleResolvedSpell(spellID)
             PlayRandom("ATTACK")
         end
     elseif DKE_debugEnabled then
-        print("|cffC41E3ADKE DEBUG|r listede yok, eklemek icin: [" .. tostring(spellID) .. "]=true")
+        print("|cffC41E3ADKE DEBUG|r not in list, to add: [" .. tostring(spellID) .. "]=true")
     end
 end
 
@@ -239,13 +285,13 @@ local function SpellFromKey(key)
         end
     end
     if not action then
-        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r binding bulunamadi") end
+        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r no binding found") end
         return nil
     end
 
     local slot = ResolveActionSlot(action)
     if not slot then
-        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r slot cozulemedi: " .. tostring(action)) end
+        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r could not resolve slot: " .. tostring(action)) end
         return nil
     end
 
@@ -253,7 +299,7 @@ local function SpellFromKey(key)
     if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r slot=" .. slot .. " type=" .. tostring(aType) .. " id=" .. tostring(id)) end
     if ok and aType == "spell" and id then return id end
     if ok and aType == "macro" and id then
-        -- WoW Midnight: GetActionInfo macro icin dogrudan spell ID donduruyor
+        -- WoW Midnight: GetActionInfo returns spell ID directly for macros
         if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r macro direct spellID=" .. id) end
         return id
     end
@@ -289,7 +335,7 @@ local function RebuildMacroCache()
     if DKE_debugEnabled then
         local count = 0
         for _ in pairs(macroSlotCache) do count = count + 1 end
-        print("|cffC41E3ADKE DEBUG|r macro cache rebuild: " .. count .. " slot")
+        print("|cffC41E3ADKE DEBUG|r macro cache rebuilt: " .. count .. " slots")
     end
 end
 
@@ -327,6 +373,10 @@ local pollTimer = 0
 local POLL = 0.2
 
 local frame = CreateFrame("Frame")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+frame:SetScript("OnEvent", function()
+    PlayRandom("LOGIN")
+end)
 frame:SetScript("OnUpdate", function(_, elapsed)
     pollTimer = pollTimer + elapsed
     if pollTimer < POLL then return end
@@ -396,16 +446,16 @@ SlashCmdList["DKE"] = function(msg)
     if cmd == "on" then
         DKE_soundEnabled = true
         DKE_settings.soundEnabled = true
-        print("|cffC41E3ADeathKnightExperience|r: Seslendirme |cff00FF00acik|r.")
+        print("|cffC41E3ADeathKnightExperience|r: Sound |cff00FF00enabled|r.")
     elseif cmd == "off" then
         DKE_soundEnabled = false
         DKE_settings.soundEnabled = false
-        print("|cffC41E3ADeathKnightExperience|r: Seslendirme |cffFF0000kapali|r.")
+        print("|cffC41E3ADeathKnightExperience|r: Sound |cffFF0000disabled|r.")
     elseif cmd == "debug" then
         DKE_debugEnabled = not DKE_debugEnabled
-        print("|cffC41E3ADeathKnightExperience|r: Debug " .. (DKE_debugEnabled and "|cff00FF00acik|r" or "|cffFF0000kapali|r") .. ".")
+        print("|cffC41E3ADeathKnightExperience|r: Debug " .. (DKE_debugEnabled and "|cff00FF00on|r" or "|cffFF0000off|r") .. ".")
     else
-        print("|cffC41E3ADeathKnightExperience|r: Kullanim: /dke on | /dke off | /dke debug")
+        print("|cffC41E3ADeathKnightExperience|r: Usage: /dke on | /dke off | /dke debug")
     end
 end
 

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(mv \"breath_of_syndragosa/breath of sindragosa.ogg\" \"breath_of_syndragosa/breath_of_sindragosa.ogg\")",
+      "Bash(mv \"death/death 2.ogg\" \"death/death_2.ogg\")",
+      "Bash(mv \"death/death 3.ogg\" \"death/death_3.ogg\")",
+      "Bash(mv \"death_strike/death strike.ogg\" \"death_strike/death_strike.ogg\")",
+      "Bash(mv \"deathanddecay/death and decay.ogg\" \"deathanddecay/death_and_decay.ogg\")"
+    ]
+  }
+}

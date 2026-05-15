@@ -178,7 +178,7 @@ local SpellToSound = {
     [50977]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
     [279302] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89,anyCombat=true, protect = 6 }, -- Frostwyrm's Fury
     --[49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
-    [47528]  = { cat = "MIND_FREEZE",  prob = 1.0, cd = 14 },           -- Mind Freeze
+    [47528]  = { cat = "MIND_FREEZE",  prob = 1.0 },           -- Mind Freeze
     --[194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance
   --  [207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe
     [61999] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
@@ -377,9 +377,15 @@ local POLL = 0.2
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:SetScript("OnEvent", function()
-    local now = time()
-    if not DKE_settings.lastLoginSound or now - DKE_settings.lastLoginSound >= 3600 then
-        DKE_settings.lastLoginSound = now
+    local sessionNow = GetTime()
+    local stored = DKE_settings.lastLoginSoundSession
+    -- if stored value is larger than current GetTime, game was restarted (GetTime reset)
+    if stored and stored > sessionNow + 60 then
+        DKE_settings.lastLoginSoundSession = nil
+        stored = nil
+    end
+    if not stored or sessionNow - stored >= 3600 then
+        DKE_settings.lastLoginSoundSession = sessionNow
         PlayRandom("LOGIN")
     end
 end)

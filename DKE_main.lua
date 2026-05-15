@@ -180,7 +180,7 @@ local SpellToSound = {
     --[49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
     [47528]  = { cat = "MIND_FREEZE",  prob = 1.0,cd=15 },           -- Mind Freeze
     --[194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance
-  --  [207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe
+    --[207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe
     [61999] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
     [45524] = { cat = "CHAIN_OF_ICE", prob = 1.0, cd = 6 },           -- Chain of Ice
 }
@@ -371,22 +371,17 @@ local prevAFK        = false
 local prevTargetSelf = false
 local prevPet        = false
 
-local pollTimer = 0
-local POLL = 0.2
+local pollTimer       = 0
+local POLL            = 0.2
+local loginLastPlayed = nil
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:SetScript("OnEvent", function()
-    local sessionNow = GetTime()
-    local stored = DKE_settings.lastLoginSoundSession
-    -- if stored value is larger than current GetTime, game was restarted (GetTime reset)
-    if stored and stored > sessionNow + 60 then
-        DKE_settings.lastLoginSoundSession = nil
-        stored = nil
-    end
-    if not stored or sessionNow - stored >= 3600 then
-        DKE_settings.lastLoginSoundSession = sessionNow
-        PlayRandom("LOGIN")
+    local now = GetTime()
+    if not loginLastPlayed or now - loginLastPlayed >= 3600 then
+        loginLastPlayed = now
+        PlayRandom("LOGIN", true)
     end
 end)
 frame:SetScript("OnUpdate", function(_, elapsed)

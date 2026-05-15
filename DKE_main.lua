@@ -4,7 +4,7 @@ if classId ~= 6 then return end
 DKE_settings = DKE_settings or {}
 local DKE_soundEnabled  = (DKE_settings.soundEnabled ~= false)
 local DKE_debugEnabled  = false
-local DKE_GLOBAL_CD     = 14
+local DKE_GLOBAL_CD     = 8
 local DKE_FORCE_MIN_GAP = 3
 local DKE_lastSoundTime = 0
 

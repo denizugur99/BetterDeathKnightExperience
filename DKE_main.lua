@@ -145,7 +145,7 @@ local SpellNameToID = {
     ["Death Grip"]             = 49576,
     ["Asphyxiate"]             = 108194,
     ["Blinding Sleet"]         = 207167,
-    ["Breath of Sindragosa"]   = 152279,
+    ["Breath of Sindragosa"]   = 1249658,
     ["Death Gate"]             = 50977,
     ["Frostwyrm's Fury"]       = 1249658,
     ["Lichborne"]              = 49039,
@@ -174,9 +174,9 @@ local SpellToSound = {
     [43265]  = { cat = "DAD",          prob = 1.0  },                   -- Death and Decay
     [108194] = { cat = "ASPHYXIATE",   prob = 1.0  },                   -- Asphyxiate
     [207167] = { cat = "BLINDING_SLEET", prob = 1.0 },                  -- Blinding Sleet
-    [152279] = { cat = "BREATH",       prob = 1.0, cd = 89 },           -- Breath of Sindragosa
+    [1249658] = { cat = "BREATH",       prob = 1.0, cd = 89 },           -- Breath of Sindragosa
     [50977]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
-    [1249658] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89, protect = 6 }, -- Frostwyrm's Fury
+    [1249658] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89,anyCombat=true, protect = 6 }, -- Frostwyrm's Fury
     [49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
     [47528]  = { cat = "MIND_FREEZE",  prob = 1.0, cd = 14 },           -- Mind Freeze
     --[194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance

@@ -4,8 +4,7 @@ if classId ~= 6 then return end
 DKE_settings = DKE_settings or {}
 local DKE_soundEnabled  = (DKE_settings.soundEnabled ~= false)
 local DKE_debugEnabled  = false
-local DKE_GLOBAL_CD     = 8
-local DKE_FORCE_MIN_GAP = 3
+local DKE_GLOBAL_CD     = 3
 local DKE_lastSoundTime = 0
 
 local function CanPlay()
@@ -21,9 +20,7 @@ local currentSoundHandle  = nil
 local function PlayRandom(category, force)
     if not DKE_soundEnabled then return end
     if force then
-        local now = GetTime()
-        if now - DKE_lastSoundTime < DKE_FORCE_MIN_GAP then return end
-        DKE_lastSoundTime = now
+        DKE_lastSoundTime = GetTime()
     elseif not CanPlay() then
         return
     end
@@ -151,7 +148,7 @@ local SpellNameToID = {
     -- ["Army of the Dead"]    = 42650,   -- no sound
     -- ["Commander of the Dead"] = 390260, -- no sound
     -- ["Apocalypse"]          = 220143,  -- no sound
-    ["Raise Ally"]             = 461621,
+    ["Raise Ally"]             = 46585,
 }
 
 local SpellToSound = {
@@ -165,7 +162,7 @@ local SpellToSound = {
     [55090]  = { cat = "ATTACK",       prob = 0.1  },                   -- Scourge Strike
     [51271]  = { cat = "PILLAR",       prob = 1.0, cd = 44, anyCombat = true},           -- Pillar of Frost
     [49576]  = { cat = "DEATHGRIP",    prob = 1.0  },                   -- Death Grip
-    [49998]  = { cat = "DEATH_STRIKE", prob = 1.0  },                   -- Death Strike
+    [49998]  = { cat = "DEATH_STRIKE", prob = 1.0, cd = 1 },             -- Death Strike
     [43265]  = { cat = "DAD",          prob = 1.0  },                   -- Death and Decay
     [108194] = { cat = "ASPHYXIATE",   prob = 1.0  },                   -- Asphyxiate
     [207167] = { cat = "BLINDING_SLEET", prob = 1.0 },                  -- Blinding Sleet
@@ -176,7 +173,7 @@ local SpellToSound = {
     [47528]  = { cat = "MIND_FREEZE",  prob = 1.0  },                   -- Mind Freeze
     [194913] = { cat = "ATTACK",       prob = 0.1  },                   -- Glacial Advance
     [207230] = { cat = "ATTACK",       prob = 0.1  },                   -- Frostscythe
-    [461621] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
+    [46585] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
 }
 
 local AttackSpells = {
@@ -197,7 +194,6 @@ local function HandleResolvedSpell(spellID)
     if info then
         local now = GetTime()
         if info.cd and now - (spellLastPlayed[spellID] or 0) < info.cd then
-            if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r spell on cooldown, skipped") end
             return
         end
         if math.random() <= info.prob then
@@ -208,8 +204,6 @@ local function HandleResolvedSpell(spellID)
         if math.random() <= 0.4 then
             PlayRandom("ATTACK")
         end
-    elseif DKE_debugEnabled then
-        print("|cffC41E3ADKE DEBUG|r not in list, to add: [" .. tostring(spellID) .. "]=true")
     end
 end
 
@@ -285,22 +279,18 @@ local function SpellFromKey(key)
         end
     end
     if not action then
-        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r no binding found") end
         return nil
     end
 
     local slot = ResolveActionSlot(action)
     if not slot then
-        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r could not resolve slot: " .. tostring(action)) end
         return nil
     end
 
     local ok, aType, id = pcall(GetActionInfo, slot)
-    if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r slot=" .. slot .. " type=" .. tostring(aType) .. " id=" .. tostring(id)) end
     if ok and aType == "spell" and id then return id end
     if ok and aType == "macro" and id then
         -- WoW Midnight: GetActionInfo returns spell ID directly for macros
-        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r macro direct spellID=" .. id) end
         return id
     end
     return nil
@@ -331,11 +321,6 @@ local function RebuildMacroCache()
                 end
             end
         end
-    end
-    if DKE_debugEnabled then
-        local count = 0
-        for _ in pairs(macroSlotCache) do count = count + 1 end
-        print("|cffC41E3ADKE DEBUG|r macro cache rebuilt: " .. count .. " slots")
     end
 end
 
@@ -375,7 +360,11 @@ local POLL = 0.2
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:SetScript("OnEvent", function()
-    PlayRandom("LOGIN")
+    local now = time()
+    if not DKE_settings.lastLoginSound or now - DKE_settings.lastLoginSound >= 3600 then
+        DKE_settings.lastLoginSound = now
+        PlayRandom("LOGIN")
+    end
 end)
 frame:SetScript("OnUpdate", function(_, elapsed)
     pollTimer = pollTimer + elapsed

@@ -147,7 +147,7 @@ local SpellNameToID = {
     ["Blinding Sleet"]         = 207167,
     ["Breath of Sindragosa"]   = 1249658,
     ["Death Gate"]             = 50977,
-    ["Frostwyrm's Fury"]       = 1249658,
+    ["Frostwyrm's Fury"]       = 279302,
     ["Lichborne"]              = 49039,
     ["Mind Freeze"]            = 47528,
     ["Glacial Advance"]        = 194913,
@@ -176,13 +176,13 @@ local SpellToSound = {
     [207167] = { cat = "BLINDING_SLEET", prob = 1.0 },                  -- Blinding Sleet
     [1249658] = { cat = "BREATH",       prob = 1.0, cd = 89 },           -- Breath of Sindragosa
     [50977]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
-    [1249658] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89,anyCombat=true, protect = 6 }, -- Frostwyrm's Fury
+    [279302] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89,anyCombat=true, protect = 6 }, -- Frostwyrm's Fury
     [49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
     [47528]  = { cat = "MIND_FREEZE",  prob = 1.0, cd = 14 },           -- Mind Freeze
     --[194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance
   --  [207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe
     [61999] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
-    [45524] = { cat = "CHAIN_OF_ICE", prob = 1.0, cd = 12 },           -- Chain of Ice
+    [45524] = { cat = "CHAIN_OF_ICE", prob = 1.0, cd = 6 },           -- Chain of Ice
 }
 
 -- local AttackSpells = {

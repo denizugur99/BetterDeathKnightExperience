@@ -83,9 +83,9 @@ DKE_Sounds = {
     AFKEND = {
         { "afkend\\afkend.ogg", 1 },
     },
-    ATTACK = {
-        { "attack\\attack.ogg", 1 },
-    },
+    -- ATTACK = {
+    --     { "attack\\attack.ogg", 1 },
+    -- },
     RAISE = {
         { "raise\\raise_dead.ogg", 1 }, { "raise\\raise_dke.ogg",  1 },
         { "raise\\raise2_dke.ogg", 1 },
@@ -185,10 +185,10 @@ local SpellToSound = {
     [45524] = { cat = "CHAIN_OF_ICE", prob = 1.0, cd = 12 },           -- Chain of Ice
 }
 
-local AttackSpells = {
-    [49184]=true, [47541]=true, [50842]=true, [207311]=true, [195292]=true,
-    [206930]=true, [195182]=true, [49206]=true, [63560]=true,
-}
+-- local AttackSpells = {
+--     [49184]=true, [47541]=true, [50842]=true, [207311]=true, [195292]=true,
+--     [206930]=true, [195182]=true, [49206]=true, [63560]=true,
+-- }
 
 
 local spellLastPlayed = {}
@@ -209,10 +209,6 @@ local function HandleResolvedSpell(spellID)
         if math.random() <= info.prob then
             spellLastPlayed[spellID] = now
             PlayRandom(info.cat, info.cd ~= nil, info.protect)
-        end
-    elseif AttackSpells[spellID] then
-        if math.random() <= 0.4 then
-            PlayRandom("ATTACK")
         end
     elseif DKE_debugEnabled then
         print("|cffC41E3ADKE DEBUG|r not in list, to add: [" .. tostring(spellID) .. "]=true")

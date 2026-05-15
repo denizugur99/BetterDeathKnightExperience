@@ -177,7 +177,7 @@ local SpellToSound = {
     [1249658] = { cat = "BREATH",       prob = 1.0, cd = 89 },           -- Breath of Sindragosa
     [50977]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
     [279302] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89,anyCombat=true, protect = 6 }, -- Frostwyrm's Fury
-    [49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
+    --[49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
     [47528]  = { cat = "MIND_FREEZE",  prob = 1.0, cd = 14 },           -- Mind Freeze
     --[194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance
   --  [207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe

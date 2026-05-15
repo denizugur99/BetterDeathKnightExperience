@@ -2,9 +2,24 @@
 
 A World of Warcraft addon for Death Knights that plays Arthas / Lich King voice lines and spell sound effects automatically based on your in-game actions.
 
-Only loads for Death Knight characters (class ID 6).
+Designed for **Unholy** and **Frost** Death Knights. Only loads for Death Knight characters (class ID 6).
 
 > Bug reports & feedback: **denougur0@gmail.com**
+
+---
+
+## Recommended Sound Settings
+
+For the best experience, go to `Esc → System → Sound` and set:
+
+| Channel | Value |
+|---|---|
+| Music |10%-30% |
+| Sound Effects |10%-20% |
+| Ambience |10%-20% |
+| **Dialog** | **100%** |
+
+All addon sounds play through the **Dialog** channel.
 
 ---
 
@@ -20,22 +35,16 @@ The global CD and enabled state are saved between sessions.
 
 ---
 
-## Sound Channel
-
-All sounds play through the **Dialog** channel. To control the volume, go to `Esc → System → Sound` and adjust the **Dialog** slider.
-
----
-
 ## How It Works
 
 The addon listens for two types of triggers:
 
-- **Ambient events** — state changes detected in the background (combat, death, AFK, etc.)
-- **Key presses** — every time you press a key or mouse button, the addon looks up what spell is on that action bar slot and plays the matching sound
+- **Ambient events** — state changes detected in the background (combat, death, AFK, mounting, etc.)
+- **Spell casts** — detected via `UNIT_SPELLCAST_SENT`, which fires only when a spell actually goes through (not when on cooldown or out of range). Works with keyboard, mouse clicks, mouse wheel, and macros.
 
 ### Global Cooldown
 
-A shared cooldown prevents two sounds from firing at the same time. Default is **2 seconds**, configurable with `/dke cd <seconds>`. Spells with their own internal CD (Pillar of Frost, Frostwyrm's Fury, etc.) bypass the global CD when they fire, but reset it so that subsequent sounds wait their turn.
+A shared cooldown prevents two sounds from overlapping. Default is **2 seconds**, configurable with `/dke cd <seconds>`. Important spells (Pillar of Frost, Frostwyrm's Fury, etc.) bypass the global CD with a `force` flag and always play when cast.
 
 ### Repeat Penalty
 
@@ -57,50 +66,31 @@ Within any sound category, the last played file gets **10% weight** in the rando
 | Mounting | MOUNT | 100% | |
 | Going AFK | AFKSTART | 100% | |
 | Returning from AFK | AFKEND | 100% | |
-| Pet summoned | RAISE | 100% | |
-
-While dead, all ambient sounds except DEATH and REVIVE are suppressed.
+| Pet summoned | RAISE | 75% | |
 
 ### Spell Sounds
 
-Triggered by pressing the key bound to the spell. Most require you to be in combat.
+Triggered when the spell is actually cast. Most require you to be in combat.
 
-| Spell | Category | Chance | Internal CD | Out of combat |
+| Spell | Category | Chance | Bypasses Global CD | Out of Combat |
 |---|---|---|---|---|
 | Raise Dead | RAISE | 100% | — | Yes |
 | Raise Ally | RAISE_ALLY | 100% | — | Yes |
+| Army of the Dead | ARMY | 100% | Yes | Yes |
+| Dark Transformation | DARKTRANSFORM | 100% | Yes | Yes |
+| Death's Advance | DEATHS_ADVANCE | 100% | — | Yes |
+| Death Charge | DEATHS_ADVANCE | 100% | — | Yes |
 | Death Grip | DEATHGRIP | 100% | — | — |
-| Death Strike | DEATH_STRIKE | 100% | 1s | — |
 | Death and Decay | DAD | 100% | — | — |
-| Asphyxiate | ASPHYXIATE | 100% | 45s | — |
-| Blinding Sleet | BLINDING_SLEET | 100% | 60s | — |
-| Mind Freeze | MIND_FREEZE | 100% | 15s | — |
-| Chain of Ice | CHAIN_OF_ICE | 100% | 6s | — |
-| Pillar of Frost | PILLAR | 100% | 44s | Yes |
-| Breath of Sindragosa | BREATH | 100% | 89s | — |
-| Frostwyrm's Fury | FROSTWYRM | 100% | 89s | Yes |
 | Death Gate | DEATHGATE | 100% | — | Yes |
-
-**Internal CD** — tracked per spell independently of the global cooldown. Prevents the same spell sound from firing repeatedly during a fight.
-
----
-
-## Macro Support
-
-The addon detects spells cast from macros by reading the key you pressed and looking up what spell is on that action bar slot.
-
-**In WoW Midnight**, `GetActionInfo` returns the spell ID of the spell shown in the macro's tooltip. This means the `#showtooltip` line controls which sound plays:
-
-```
-#showtooltip Pillar of Frost
-/cast [mod:shift] Frostwyrm's Fury; Pillar of Frost
-```
-
-In this example, pressing the key always plays the **Pillar of Frost** sound, because `#showtooltip` sets the displayed spell regardless of which branch of the macro actually fires.
-
-If your macro has no `#showtooltip`, the addon falls back to the **first `/cast` or `/use` line** to identify the spell.
-
-> The macro cache is built automatically on load and refreshed every time you leave combat.
+| Asphyxiate | ASPHYXIATE | 100% | Yes | — |
+| Blinding Sleet | BLINDING_SLEET | 100% | Yes | — |
+| Mind Freeze | MIND_FREEZE | 100% | Yes | — |
+| Chain of Ice | CHAIN_OF_ICE | 100% | — | — |
+| Putrefy | PUTREFY | 100% | — | — |
+| Pillar of Frost | PILLAR | 100% | Yes | Yes |
+| Breath of Sindragosa | BREATH | 100% | Yes | — |
+| Frostwyrm's Fury | FROSTWYRM | 100% | Yes | Yes |
 
 ---
 
@@ -109,9 +99,9 @@ If your macro has no `#showtooltip`, the addon falls back to the **first `/cast`
 All files must be in **.ogg** format and placed in the corresponding subfolder under `Interface/AddOns/DeathKnightExperience/sounds/`.
 
 ### sounds/login/
-| File | Used for |
-|---|---|
-| login.ogg | LOGIN |
+| File |
+|---|
+| login.ogg |
 
 ### sounds/select/
 | File |
@@ -149,6 +139,7 @@ All files must be in **.ogg** format and placed in the corresponding subfolder u
 |---|
 | afkstart.ogg |
 | idle.ogg |
+| afk.mp3 |
 
 ### sounds/afkend/
 | File |
@@ -167,21 +158,36 @@ All files must be in **.ogg** format and placed in the corresponding subfolder u
 |---|
 | raise_ally.ogg |
 
+### sounds/armyofdead/
+| File |
+|---|
+| army_of_the_dead.ogg |
+
+### sounds/darktransform/
+| File |
+|---|
+| dark_transformation.ogg |
+
+### sounds/deaths_advance/
+| File |
+|---|
+| deaths_advance_and_death_charge.ogg |
+
 ### sounds/deathgrip/
 | File |
 |---|
 | death_grip_1.ogg |
 | death_grip_2.ogg |
 
-### sounds/death_strike/
-| File |
-|---|
-| death_strike.ogg |
-
 ### sounds/deathanddecay/
 | File |
 |---|
 | death_and_decay.ogg |
+
+### sounds/deathgate/
+| File |
+|---|
+| death_gate.ogg |
 
 ### sounds/asphyxiate/
 | File |
@@ -204,6 +210,11 @@ All files must be in **.ogg** format and placed in the corresponding subfolder u
 |---|
 | chains_of_ice.ogg |
 
+### sounds/putrefy/
+| File |
+|---|
+| putrefy.ogg |
+
 ### sounds/pillar_of_frost/
 | File |
 |---|
@@ -224,7 +235,7 @@ All files must be in **.ogg** format and placed in the corresponding subfolder u
 |---|
 | lichborne.ogg |
 
-### sounds/deathgate/
+### sounds/soulreaper/
 | File |
 |---|
-| death_gate.ogg |
+| soul_reaper.ogg |

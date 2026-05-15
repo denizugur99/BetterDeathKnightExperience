@@ -3,8 +3,8 @@
 All files must be in **.ogg** format. Sound channel: **Dialog**.
 
 **System rules:**
-- Global cooldown between any two sounds: **14 seconds**
-- CD spells (force sounds) minimum gap: **3 seconds**
+- Global cooldown between any two sounds: **2 seconds** (configurable with `/dke cd`)
+- Force spells (long cooldown abilities) bypass the global CD
 - Same file repeat penalty within a category: **10% weight**
 
 ---
@@ -15,7 +15,7 @@ All files must be in **.ogg** format. Sound channel: **Dialog**.
 
 | Event | Category | Chance | Notes |
 |-------|----------|--------|-------|
-| Entering world | LOGIN | 100% | Fires on `PLAYER_ENTERING_WORLD` |
+| Login / UI reload | LOGIN | 100% | At most once per hour |
 | Targeting self | SELECT | 100% | |
 | Entering combat | AGGRO | 33% | |
 | Death | DEATH | 100% | |
@@ -27,44 +27,43 @@ All files must be in **.ogg** format. Sound channel: **Dialog**.
 
 ### Spell-Triggered Sounds
 
-| Spell | Category | Chance | Notes |
-|-------|----------|--------|-------|
-| Raise Dead | RAISE | 75% | Works out of combat |
-| Raise Ally | RAISE_ALLY | 100% | Works out of combat |
-| Death Grip | DEATHGRIP | 100% | |
-| Death Strike | DEATH_STRIKE | 100% | |
-| Death and Decay | DAD | 100% | |
-| Asphyxiate | ASPHYXIATE | 100% | |
-| Blinding Sleet | BLINDING_SLEET | 100% | |
-| Mind Freeze | MIND_FREEZE | 100% | |
-| Pillar of Frost | PILLAR | 100% | Force sound, CD: 44s |
-| Breath of Sindragosa | BREATH | 100% | Force sound, CD: 89s |
-| Frostwyrm's Fury | FROSTWYRM | 100% | Force sound, CD: 89s |
-| Lichborne | LICHBORNE | 100% | Works out of combat |
-| Death Gate | DEATHGATE | 100% | Works out of combat |
-| Frost Strike | ATTACK | 10% | |
-| Obliterate | ATTACK | 10% | |
-| Scourge Strike | ATTACK | 10% | |
-| Glacial Advance | ATTACK | 10% | |
-| Frostscythe | ATTACK | 10% | |
-| Other attack spells | ATTACK | 40% | Generic fallback |
+| Spell | Category | Chance | Force | Out of Combat |
+|-------|----------|--------|-------|---------------|
+| Raise Dead | RAISE | 100% | — | Yes |
+| Raise Ally | RAISE_ALLY | 100% | — | Yes |
+| Army of the Dead | ARMY | 100% | Yes | Yes |
+| Dark Transformation | DARKTRANSFORM | 100% | Yes | Yes |
+| Death's Advance | DEATHS_ADVANCE | 100% | — | Yes |
+| Death Charge | DEATHS_ADVANCE | 100% | — | Yes |
+| Death Grip | DEATHGRIP | 100% | — | — |
+| Death and Decay | DAD | 100% | — | — |
+| Death Gate | DEATHGATE | 100% | — | Yes |
+| Asphyxiate | ASPHYXIATE | 100% | Yes | — |
+| Blinding Sleet | BLINDING_SLEET | 100% | Yes | — |
+| Mind Freeze | MIND_FREEZE | 100% | Yes | — |
+| Chain of Ice | CHAIN_OF_ICE | 100% | — | — |
+| Putrefy | PUTREFY | 100% | — | — |
+| Pillar of Frost | PILLAR | 100% | Yes | Yes |
+| Breath of Sindragosa | BREATH | 100% | Yes | — |
+| Frostwyrm's Fury | FROSTWYRM | 100% | Yes | Yes |
 
-### No Sound Yet
+### Commented Out (no active sound)
 
-| Spell |
-|-------|
-| Army of the Dead |
-| Commander of the Dead |
-| Apocalypse |
+| Spell | Reason |
+|-------|--------|
+| Soul Reaper | Sound file present, pending tuning |
+| Lichborne | Sound file present, pending tuning |
+| Commander of the Dead | No sound |
+| Apocalypse | No sound |
 
 ---
 
 ## Sound Files
 
 ### sounds/login/
-| File | Description |
-|------|-------------|
-| login.ogg | Login / entering world |
+| File |
+|------|
+| login.ogg |
 
 ### sounds/select/
 | File |
@@ -102,16 +101,12 @@ All files must be in **.ogg** format. Sound channel: **Dialog**.
 |------|
 | afkstart.ogg |
 | idle.ogg |
+| afk.mp3 |
 
 ### sounds/afkend/
 | File |
 |------|
 | afkend.ogg |
-
-### sounds/attack/
-| File |
-|------|
-| attack.ogg |
 
 ### sounds/raise/
 | File |
@@ -125,21 +120,36 @@ All files must be in **.ogg** format. Sound channel: **Dialog**.
 |------|
 | raise_ally.ogg |
 
+### sounds/armyofdead/
+| File |
+|------|
+| army_of_the_dead.ogg |
+
+### sounds/darktransform/
+| File |
+|------|
+| dark_transformation.ogg |
+
+### sounds/deaths_advance/
+| File |
+|------|
+| deaths_advance_and_death_charge.ogg |
+
 ### sounds/deathgrip/
 | File |
 |------|
 | death_grip_1.ogg |
 | death_grip_2.ogg |
 
-### sounds/death_strike/
-| File |
-|------|
-| death_strike.ogg |
-
 ### sounds/deathanddecay/
 | File |
 |------|
 | death_and_decay.ogg |
+
+### sounds/deathgate/
+| File |
+|------|
+| death_gate.ogg |
 
 ### sounds/asphyxiate/
 | File |
@@ -156,6 +166,16 @@ All files must be in **.ogg** format. Sound channel: **Dialog**.
 |------|
 | mind_freeze.ogg |
 | mind_freeze_2.ogg |
+
+### sounds/chainofice/
+| File |
+|------|
+| chains_of_ice.ogg |
+
+### sounds/putrefy/
+| File |
+|------|
+| putrefy.ogg |
 
 ### sounds/pillar_of_frost/
 | File |
@@ -177,7 +197,7 @@ All files must be in **.ogg** format. Sound channel: **Dialog**.
 |------|
 | lichborne.ogg |
 
-### sounds/deathgate/
+### sounds/soulreaper/
 | File |
 |------|
-| death_gate.ogg |
+| soul_reaper.ogg |

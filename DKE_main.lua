@@ -157,9 +157,9 @@ local SpellToSound = {
     -- [220143] = { cat = "ARMY",  ... }, -- Apocalypse            (no sound)
     [46584]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead
     [61999]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead (alt)
-    [49143]  = { cat = "ATTACK",       prob = 0.1  },                   -- Frost Strike
-    [49020]  = { cat = "ATTACK",       prob = 0.1  },                   -- Obliterate
-    [55090]  = { cat = "ATTACK",       prob = 0.1  },                   -- Scourge Strike
+    [49143]  = { cat = "ATTACK",       prob = 0.01  },                   -- Frost Strike
+    [49020]  = { cat = "ATTACK",       prob = 0.01  },                   -- Obliterate
+    [55090]  = { cat = "ATTACK",       prob = 0.01 },                   -- Scourge Strike
     [51271]  = { cat = "PILLAR",       prob = 1.0, cd = 44, anyCombat = true},           -- Pillar of Frost
     [49576]  = { cat = "DEATHGRIP",    prob = 1.0  },                   -- Death Grip
     [49998]  = { cat = "DEATH_STRIKE", prob = 1.0, cd = 1 },             -- Death Strike
@@ -170,9 +170,9 @@ local SpellToSound = {
     [52751]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
     [279302] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89 },           -- Frostwyrm's Fury
     [49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
-    [47528]  = { cat = "MIND_FREEZE",  prob = 1.0  },                   -- Mind Freeze
-    [194913] = { cat = "ATTACK",       prob = 0.1  },                   -- Glacial Advance
-    [207230] = { cat = "ATTACK",       prob = 0.1  },                   -- Frostscythe
+    [47528]  = { cat = "MIND_FREEZE",  prob = 1.0, cd = 14 },           -- Mind Freeze
+    [194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance
+    [207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe
     [46585] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
 }
 

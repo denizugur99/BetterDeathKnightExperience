@@ -47,7 +47,7 @@ local function PlayRandom(category, force, protectDuration)
             -- end
             if currentSoundHandle then pcall(StopSound, currentSoundHandle) end
             local ok, success, handle = pcall(PlaySoundFile,
-                "Interface\\AddOns\\DeathKnightExperience\\sounds\\" .. s[1],
+                "Interface\\AddOns\\BetterDeathKnightExperience\\sounds\\" .. s[1],
                 "Dialog")
             currentSoundHandle = (ok and success) and handle or nil
             if protectDuration then soundLockedUntil = GetTime() + protectDuration end
@@ -272,20 +272,20 @@ SlashCmdList["DKE"] = function(msg)
     if cmd == "on" then
         DKE_soundEnabled = true
         DKE_settings.soundEnabled = true
-        print("|cffC41E3ADeathKnightExperience|r: Sound |cff00FF00enabled|r.")
+        print("|cffFFFFFFBetter |r|cffC41E3ADeath Knight|r|cffFFFFFFExperience|r: Sound |cff00FF00enabled|r.")
     elseif cmd == "off" then
         DKE_soundEnabled = false
         DKE_settings.soundEnabled = false
-        print("|cffC41E3ADeathKnightExperience|r: Sound |cffFF0000disabled|r.")
+        print("|cffFFFFFFBetter |r|cffC41E3ADeath Knight|r|cffFFFFFFExperience|r: Sound |cffFF0000disabled|r.")
     -- elseif cmd == "debug" then
     --     DKE_debugEnabled = not DKE_debugEnabled
-    --     print("|cffC41E3ADeathKnightExperience|r: Debug " .. (DKE_debugEnabled and "|cff00FF00on|r" or "|cffFF0000off|r") .. ".")
+    --     print("|cffFFFFFFBetter |r|cffC41E3ADeath Knight|r|cffFFFFFFExperience|r: Debug " .. (DKE_debugEnabled and "|cff00FF00on|r" or "|cffFF0000off|r") .. ".")
     elseif cmd:match("^cd %d+$") then
         local val = tonumber(cmd:match("%d+"))
         DKE_GLOBAL_CD = val
         DKE_settings.globalCD = val
-        print("|cffC41E3ADeathKnightExperience|r: Global CD set to |cffFFFF00" .. val .. "|r seconds.")
+        print("|cffFFFFFFBetter |r|cffC41E3ADeath Knight|r|cffFFFFFFExperience|r: Global CD set to |cffFFFF00" .. val .. "|r seconds.")
     else
-        print("|cffC41E3ADeathKnightExperience|r: Usage: /dke on | /dke off | /dke debug | /dke cd <seconds>")
+        print("|cffFFFFFFBetter |r|cffC41E3ADeath Knight|r|cffFFFFFFExperience|r: Usage: /dke on | /dke off | /dke debug | /dke cd <seconds>")
     end
 end

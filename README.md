@@ -1,4 +1,4 @@
-# DeathKnightExperience
+# Better Death Knight Experience
 
 A World of Warcraft addon for Death Knights that plays Arthas / Lich King voice lines and spell sound effects automatically based on your in-game actions.
 

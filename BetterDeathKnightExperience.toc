@@ -1,6 +1,6 @@
 ## Interface: 120001
 ## Interface-Retail: 120001
-## Title: |cffC41E3ADeathKnight|r|cffFFFFFFExperience|r
+## Title: |cffFFFFFFBetter |r|cffC41E3ADeath Knight|r|cffFFFFFFExperience|r
 ## Notes: Experience Death Knight gameplay with the voice of Arthas Menethil
 ## Author: Deniz Uğur, Mert Aral
 ## Version: 1.0.0

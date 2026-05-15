@@ -178,7 +178,7 @@ local SpellToSound = {
     [50977]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
     [279302] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89,anyCombat=true, protect = 6 }, -- Frostwyrm's Fury
     --[49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
-    [47528]  = { cat = "MIND_FREEZE",  prob = 1.0,cd=10 },           -- Mind Freeze
+    [47528]  = { cat = "MIND_FREEZE",  prob = 1.0,cd=15 },           -- Mind Freeze
     --[194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance
   --  [207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe
     [61999] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally

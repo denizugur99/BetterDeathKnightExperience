@@ -143,7 +143,7 @@ local SpellNameToID = {
     ["Summon Gargoyle"]        = 49206,
     ["Howling Blast"]          = 49184,
     ["Death Grip"]             = 49576,
-    ["Asphyxiate"]             = 108194,
+    ["Asphyxiate"]             = 221562,
     ["Blinding Sleet"]         = 207167,
     ["Breath of Sindragosa"]   = 1249658,
     ["Death Gate"]             = 50977,
@@ -172,8 +172,8 @@ local SpellToSound = {
     [49576]  = { cat = "DEATHGRIP",    prob = 1.0  },                   -- Death Grip
     [49998]  = { cat = "DEATH_STRIKE", prob = 1.0, cd = 1 },             -- Death Strike
     [43265]  = { cat = "DAD",          prob = 1.0  },                   -- Death and Decay
-    [108194] = { cat = "ASPHYXIATE",   prob = 1.0  },                   -- Asphyxiate
-    [207167] = { cat = "BLINDING_SLEET", prob = 1.0 },                  -- Blinding Sleet
+    [221562] = { cat = "ASPHYXIATE",   prob = 1.0,cd=45  },                   -- Asphyxiate
+    [207167] = { cat = "BLINDING_SLEET", prob = 1.0,cd=60 },                  -- Blinding Sleet
     [1249658] = { cat = "BREATH",       prob = 1.0, cd = 89 },           -- Breath of Sindragosa
     [50977]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
     [279302] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89,anyCombat=true, protect = 6 }, -- Frostwyrm's Fury
@@ -346,7 +346,7 @@ local MOUSE_TO_BIND_KEY = {
     Button4="BUTTON4", Button5="BUTTON5",
 }
 
-local keyFrame = CreateFrame("Frame", nil, UIParent)
+local keyFrame = CreateFrame("Frame", nil, WorldFrame)
 keyFrame:SetAllPoints()
 keyFrame:EnableKeyboard(true)
 keyFrame:EnableMouse(true)

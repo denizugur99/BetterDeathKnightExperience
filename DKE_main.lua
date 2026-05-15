@@ -156,7 +156,7 @@ local SpellNameToID = {
     -- ["Army of the Dead"]    = 42650,   -- no sound
     -- ["Commander of the Dead"] = 390260, -- no sound
     -- ["Apocalypse"]          = 220143,  -- no sound
-    ["Raise Ally"]             = 46585,
+    ["Raise Ally"]             = 61999,
 }
 
 local SpellToSound = {
@@ -164,7 +164,7 @@ local SpellToSound = {
     -- [390260] = { cat = "ARMY",  ... }, -- Commander of the Dead (no sound)
     -- [220143] = { cat = "ARMY",  ... }, -- Apocalypse            (no sound)
     [46585]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead
-    [61999]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead (alt)
+     
     --[49143]  = { cat = "ATTACK",       prob = 0.01  },                   -- Frost Strike
     --[49020]  = { cat = "ATTACK",       prob = 0.01  },                   -- Obliterate
     --[55090]  = { cat = "ATTACK",       prob = 0.01 },                   -- Scourge Strike
@@ -181,7 +181,7 @@ local SpellToSound = {
     [47528]  = { cat = "MIND_FREEZE",  prob = 1.0, cd = 14 },           -- Mind Freeze
     --[194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance
   --  [207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe
-    [46585] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
+    [61999] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
     [45524] = { cat = "CHAIN_OF_ICE", prob = 1.0, cd = 12 },           -- Chain of Ice
 }
 

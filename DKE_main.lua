@@ -4,7 +4,7 @@ if classId ~= 6 then return end
 DKE_settings = DKE_settings or {}
 local DKE_soundEnabled  = (DKE_settings.soundEnabled ~= false)
 local DKE_debugEnabled  = false
-local DKE_GLOBAL_CD     = 3
+local DKE_GLOBAL_CD     = DKE_settings.globalCD or 3
 local DKE_lastSoundTime = 0
 
 local function CanPlay()
@@ -16,11 +16,14 @@ end
 
 local lastPlayedInCategory = {}
 local currentSoundHandle  = nil
+local soundLockedUntil    = 0
 
-local function PlayRandom(category, force)
+local function PlayRandom(category, force, protectDuration)
     if not DKE_soundEnabled then return end
+    local now = GetTime()
+    if now < soundLockedUntil then return end
     if force then
-        DKE_lastSoundTime = GetTime()
+        DKE_lastSoundTime = now
     elseif not CanPlay() then
         return
     end
@@ -47,6 +50,7 @@ local function PlayRandom(category, force)
                 "Interface\\AddOns\\DeathKnightExperience\\sounds\\" .. s[1],
                 "Dialog")
             currentSoundHandle = (ok and success) and handle or nil
+            if protectDuration then soundLockedUntil = GetTime() + protectDuration end
             return
         end
     end
@@ -122,10 +126,13 @@ DKE_Sounds = {
     RAISE_ALLY = {
         { "raise_ally\\raise_ally.ogg", 1 },
     },
+    CHAIN_OF_ICE = {
+        { "chainofice\\chains_of_ice.ogg", 1 },
+    },
 }
 
 local SpellNameToID = {
-    ["Raise Dead"]             = 46584,
+    ["Raise Dead"]             = 46585,
     ["Frost Strike"]           = 49143,
     ["Obliterate"]             = 49020,
     ["Scourge Strike"]         = 55090,
@@ -139,12 +146,13 @@ local SpellNameToID = {
     ["Asphyxiate"]             = 108194,
     ["Blinding Sleet"]         = 207167,
     ["Breath of Sindragosa"]   = 152279,
-    ["Death Gate"]             = 52751,
-    ["Frostwyrm's Fury"]       = 279302,
+    ["Death Gate"]             = 50977,
+    ["Frostwyrm's Fury"]       = 1249658,
     ["Lichborne"]              = 49039,
     ["Mind Freeze"]            = 47528,
     ["Glacial Advance"]        = 194913,
     ["Frostscythe"]            = 207230,
+    ["Chain of Ice"]            = 45524,
     -- ["Army of the Dead"]    = 42650,   -- no sound
     -- ["Commander of the Dead"] = 390260, -- no sound
     -- ["Apocalypse"]          = 220143,  -- no sound
@@ -155,25 +163,26 @@ local SpellToSound = {
     -- [42650]  = { cat = "ARMY",  ... }, -- Army of the Dead      (no sound)
     -- [390260] = { cat = "ARMY",  ... }, -- Commander of the Dead (no sound)
     -- [220143] = { cat = "ARMY",  ... }, -- Apocalypse            (no sound)
-    [46584]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead
+    [46585]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead
     [61999]  = { cat = "RAISE",        prob = 1.0, anyCombat = true }, -- Raise Dead (alt)
-    [49143]  = { cat = "ATTACK",       prob = 0.01  },                   -- Frost Strike
-    [49020]  = { cat = "ATTACK",       prob = 0.01  },                   -- Obliterate
-    [55090]  = { cat = "ATTACK",       prob = 0.01 },                   -- Scourge Strike
-    [51271]  = { cat = "PILLAR",       prob = 1.0, cd = 44, anyCombat = true},           -- Pillar of Frost
+    --[49143]  = { cat = "ATTACK",       prob = 0.01  },                   -- Frost Strike
+    --[49020]  = { cat = "ATTACK",       prob = 0.01  },                   -- Obliterate
+    --[55090]  = { cat = "ATTACK",       prob = 0.01 },                   -- Scourge Strike
+    [51271]  = { cat = "PILLAR",       prob = 1.0, cd = 44, anyCombat = true, protect = 6 }, -- Pillar of Frost
     [49576]  = { cat = "DEATHGRIP",    prob = 1.0  },                   -- Death Grip
     [49998]  = { cat = "DEATH_STRIKE", prob = 1.0, cd = 1 },             -- Death Strike
     [43265]  = { cat = "DAD",          prob = 1.0  },                   -- Death and Decay
     [108194] = { cat = "ASPHYXIATE",   prob = 1.0  },                   -- Asphyxiate
     [207167] = { cat = "BLINDING_SLEET", prob = 1.0 },                  -- Blinding Sleet
     [152279] = { cat = "BREATH",       prob = 1.0, cd = 89 },           -- Breath of Sindragosa
-    [52751]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
-    [279302] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89 },           -- Frostwyrm's Fury
+    [50977]  = { cat = "DEATHGATE",    prob = 1.0, anyCombat = true },  -- Death Gate
+    [1249658] = { cat = "FROSTWYRM",    prob = 1.0, cd = 89, protect = 6 }, -- Frostwyrm's Fury
     [49039]  = { cat = "LICHBORNE",    prob = 1.0, anyCombat = true },  -- Lichborne
     [47528]  = { cat = "MIND_FREEZE",  prob = 1.0, cd = 14 },           -- Mind Freeze
-    [194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance
-    [207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe
+    --[194913] = { cat = "ATTACK",       prob = 0.01  },                   -- Glacial Advance
+  --  [207230] = { cat = "ATTACK",       prob = 0.01  },                   -- Frostscythe
     [46585] = { cat = "RAISE_ALLY",   prob = 1.0, anyCombat = true },  -- Raise Ally
+    [45524] = { cat = "CHAIN_OF_ICE", prob = 1.0, cd = 12 },           -- Chain of Ice
 }
 
 local AttackSpells = {
@@ -194,16 +203,19 @@ local function HandleResolvedSpell(spellID)
     if info then
         local now = GetTime()
         if info.cd and now - (spellLastPlayed[spellID] or 0) < info.cd then
+            if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r spell on cooldown, skipped") end
             return
         end
         if math.random() <= info.prob then
             spellLastPlayed[spellID] = now
-            PlayRandom(info.cat, info.cd ~= nil)
+            PlayRandom(info.cat, info.cd ~= nil, info.protect)
         end
     elseif AttackSpells[spellID] then
         if math.random() <= 0.4 then
             PlayRandom("ATTACK")
         end
+    elseif DKE_debugEnabled then
+        print("|cffC41E3ADKE DEBUG|r not in list, to add: [" .. tostring(spellID) .. "]=true")
     end
 end
 
@@ -279,18 +291,22 @@ local function SpellFromKey(key)
         end
     end
     if not action then
+        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r no binding found") end
         return nil
     end
 
     local slot = ResolveActionSlot(action)
     if not slot then
+        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r could not resolve slot: " .. tostring(action)) end
         return nil
     end
 
     local ok, aType, id = pcall(GetActionInfo, slot)
+    if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r slot=" .. slot .. " type=" .. tostring(aType) .. " id=" .. tostring(id)) end
     if ok and aType == "spell" and id then return id end
     if ok and aType == "macro" and id then
         -- WoW Midnight: GetActionInfo returns spell ID directly for macros
+        if DKE_debugEnabled then print("|cffC41E3ADKE DEBUG|r macro direct spellID=" .. id) end
         return id
     end
     return nil
@@ -300,6 +316,7 @@ local function RebuildMacroCache()
     macroSlotCache = {}
     local bodyFn = GetMacroBody or (C_Macro and C_Macro.GetMacroBody)
     if not bodyFn then return end
+    local count = 0
     for _, offset in pairs(BAR_OFFSETS) do
         for i = 1, 12 do
             local slot = offset + i
@@ -314,6 +331,7 @@ local function RebuildMacroCache()
                             local sID = spellName and SpellNameToID[spellName]
                             if sID then
                                 macroSlotCache[slot] = sID
+                                count = count + 1
                                 break
                             end
                         end
@@ -321,6 +339,9 @@ local function RebuildMacroCache()
                 end
             end
         end
+    end
+    if DKE_debugEnabled then
+        print("|cffC41E3ADKE DEBUG|r macro cache rebuilt: " .. count .. " slots")
     end
 end
 
@@ -443,8 +464,13 @@ SlashCmdList["DKE"] = function(msg)
     elseif cmd == "debug" then
         DKE_debugEnabled = not DKE_debugEnabled
         print("|cffC41E3ADeathKnightExperience|r: Debug " .. (DKE_debugEnabled and "|cff00FF00on|r" or "|cffFF0000off|r") .. ".")
+    elseif cmd:match("^cd %d+$") then
+        local val = tonumber(cmd:match("%d+"))
+        DKE_GLOBAL_CD = val
+        DKE_settings.globalCD = val
+        print("|cffC41E3ADeathKnightExperience|r: Global CD set to |cffFFFF00" .. val .. "|r seconds.")
     else
-        print("|cffC41E3ADeathKnightExperience|r: Usage: /dke on | /dke off | /dke debug")
+        print("|cffC41E3ADeathKnightExperience|r: Usage: /dke on | /dke off | /dke debug | /dke cd <seconds>")
     end
 end
 

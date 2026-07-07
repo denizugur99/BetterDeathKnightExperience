@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d//**)",
+      "Read(//c/Users/deniz/**)",
+      "Bash(xargs grep -l -i \"secret\")",
+      "Bash(ls -la)",
+      "Bash(find /d/Reps -maxdepth 1 -type d)"
+    ],
+    "additionalDirectories": [
+      "D:\\Reps\\VarathrazPaladinExperience",
+      "D:\\Reps\\MonkExperience"
+    ]
+  }
+}

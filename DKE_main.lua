@@ -239,13 +239,18 @@ frame:SetScript("OnUpdate", function(_, elapsed)
             prevMounted = false
         end
 
-        local isAFK = UnitIsAFK("player")
-        if isAFK and not prevAFK then
-            prevAFK = true
-            PlayRandom("AFKSTART")
-        elseif not isAFK and prevAFK then
-            prevAFK = false
-            PlayRandom("AFKEND")
+        local okAFK, afkEvent = pcall(function()
+            local isAFK = UnitIsAFK("player")
+            if isAFK and not prevAFK then
+                prevAFK = true
+                return "AFKSTART"
+            elseif not isAFK and prevAFK then
+                prevAFK = false
+                return "AFKEND"
+            end
+        end)
+        if okAFK and afkEvent then
+            PlayRandom(afkEvent)
         end
 
         local targetSelf = UnitExists("target") and UnitIsUnit("target", "player")
